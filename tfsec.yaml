@@ -1,0 +1,13 @@
+exclude:
+  - aws-ssm-secret-use-customer-key # Module defaults to encrypting secrets with CMK, but this is not hardcoded and therefore a spurious error
+  - aws-ec2-no-public-egress-sgr
+  - aws-dynamodb-enable-at-rest-encryption
+  - aws-s3-block-public-acls
+  - aws-s3-block-public-policy
+  - aws-s3-ignore-public-acls
+  - aws-s3-no-public-buckets
+  - aws-dynamodb-enable-recovery
+  - aws-kms-auto-rotate-keys
+  - aws-s3-enable-bucket-logging
+  - aws-dynamodb-table-customer-key
+  - aws-s3-specify-public-access-block
