@@ -10,12 +10,6 @@ variable "force_destroy" {
   type        = bool
 }
 
-variable "region" {
-  description = "In which region S3 bucket will create"
-  default     = ""
-  type        = string
-}
-
 variable "versioning_enabled" {
   description = "keeping multiple variants of an object in the same bucket"
   default     = false
@@ -24,7 +18,7 @@ variable "versioning_enabled" {
 
 variable "logging" {
   description = "Map containing access bucket logging configuration"
-  default     = false
+  default     = true
   type        = bool
 }
 

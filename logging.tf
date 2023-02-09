@@ -74,7 +74,7 @@ resource "aws_iam_policy" "s3_cloudtrail_cloudwatch_policy" {
         "logs:CreateLogStream"
       ],
       "Resource": [
-        "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:${var.bucket_name}-${data.aws_caller_identity.current.account_id}-S3:log-stream:*"
+        "arn:aws:logs:${data.aws_region.region.name}:${data.aws_caller_identity.current.account_id}:log-group:${var.bucket_name}-${data.aws_caller_identity.current.account_id}-S3:log-stream:*"
       ]
     },
     {
@@ -84,7 +84,7 @@ resource "aws_iam_policy" "s3_cloudtrail_cloudwatch_policy" {
         "logs:PutLogEvents"
       ],
       "Resource": [
-        "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:${var.bucket_name}-${data.aws_caller_identity.current.account_id}-S3:log-stream:*"
+        "arn:aws:logs:${data.aws_region.region.name}:${data.aws_caller_identity.current.account_id}:log-group:${var.bucket_name}-${data.aws_caller_identity.current.account_id}-S3:log-stream:*"
       ]
     }
   ]

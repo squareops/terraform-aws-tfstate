@@ -1,182 +1,3 @@
-## IAM Permission
-<!-- BEGINNING OF PRE-COMMIT-PIKE DOCS HOOK -->
-The Policy required is:
-
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "VisualEditor0",
-            "Effect": "Allow",
-            "Action": [
-                "cloudtrail:AddTags",
-                "cloudtrail:CreateTrail",
-                "cloudtrail:DeleteTrail",
-                "cloudtrail:DescribeTrails",
-                "cloudtrail:GetEventSelectors",
-                "cloudtrail:GetTrailStatus",
-                "cloudtrail:ListTags",
-                "cloudtrail:PutEventSelectors",
-                "cloudtrail:RemoveTags",
-                "cloudtrail:StartLogging",
-                "cloudtrail:UpdateTrail"
-            ],
-            "Resource": [
-                "*"
-            ]
-        },
-        {
-            "Sid": "VisualEditor1",
-            "Effect": "Allow",
-            "Action": [
-                "dynamodb:CreateTable",
-                "dynamodb:DeleteTable",
-                "dynamodb:DescribeContinuousBackups",
-                "dynamodb:DescribeTable",
-                "dynamodb:DescribeTimeToLive",
-                "dynamodb:ListTagsOfResource",
-                "dynamodb:TagResource",
-                "dynamodb:UntagResource",
-                "dynamodb:UpdateTable",
-                "dynamodb:UpdateTimeToLive"
-            ],
-            "Resource": [
-                "*"
-            ]
-        },
-        {
-            "Sid": "VisualEditor2",
-            "Effect": "Allow",
-            "Action": [
-                "ec2:DescribeAccountAttributes"
-            ],
-            "Resource": [
-                "*"
-            ]
-        },
-        {
-            "Sid": "VisualEditor3",
-            "Effect": "Allow",
-            "Action": [
-                "iam:AttachRolePolicy",
-                "iam:CreatePolicy",
-                "iam:CreateRole",
-                "iam:DeletePolicy",
-                "iam:DeleteRole",
-                "iam:DetachRolePolicy",
-                "iam:GetPolicy",
-                "iam:GetPolicyVersion",
-                "iam:GetRole",
-                "iam:ListAttachedRolePolicies",
-                "iam:ListInstanceProfilesForRole",
-                "iam:ListPolicyVersions",
-                "iam:ListRolePolicies",
-                "iam:PassRole",
-                "iam:TagPolicy",
-                "iam:TagRole",
-                "iam:UntagPolicy"
-            ],
-            "Resource": [
-                "*"
-            ]
-        },
-        {
-            "Sid": "VisualEditor4",
-            "Effect": "Allow",
-            "Action": [
-                "kms:CreateAlias",
-                "kms:CreateKey",
-                "kms:DeleteAlias",
-                "kms:DescribeKey",
-                "kms:DisableKey",
-                "kms:EnableKey",
-                "kms:EnableKeyRotation",
-                "kms:GetKeyPolicy",
-                "kms:GetKeyRotationStatus",
-                "kms:ListAliases",
-                "kms:ListResourceTags",
-                "kms:PutKeyPolicy",
-                "kms:ScheduleKeyDeletion",
-                "kms:TagResource",
-                "kms:UntagResource"
-            ],
-            "Resource": [
-                "*"
-            ]
-        },
-        {
-            "Sid": "VisualEditor5",
-            "Effect": "Allow",
-            "Action": [
-                "logs:AssociateKmsKey",
-                "logs:CreateLogGroup",
-                "logs:DeleteLogGroup",
-                "logs:DescribeLogGroups",
-                "logs:DisassociateKmsKey",
-                "logs:ListTagsLogGroup",
-                "logs:TagLogGroup",
-                "logs:UntagLogGroup"
-            ],
-            "Resource": [
-                "*"
-            ]
-        },
-        {
-            "Sid": "VisualEditor6",
-            "Effect": "Allow",
-            "Action": [
-                "s3:CreateBucket",
-                "s3:DeleteBucket",
-                "s3:DeleteBucketWebsite",
-                "s3:GetAccelerateConfiguration",
-                "s3:GetBucketAcl",
-                "s3:GetBucketCORS",
-                "s3:GetBucketLocation",
-                "s3:GetBucketLogging",
-                "s3:GetBucketObjectLockConfiguration",
-                "s3:GetBucketPolicy",
-                "s3:GetBucketPublicAccessBlock",
-                "s3:GetBucketRequestPayment",
-                "s3:GetBucketTagging",
-                "s3:GetBucketVersioning",
-                "s3:GetBucketWebsite",
-                "s3:GetEncryptionConfiguration",
-                "s3:GetIntelligentTieringConfiguration",
-                "s3:GetLifecycleConfiguration",
-                "s3:GetObject",
-                "s3:GetObjectAcl",
-                "s3:GetReplicationConfiguration",
-                "s3:ListAllMyBuckets",
-                "s3:ListBucket",
-                "s3:PutAccelerateConfiguration",
-                "s3:PutBucketAcl",
-                "s3:PutBucketCORS",
-                "s3:PutBucketLogging",
-                "s3:PutBucketObjectLockConfiguration",
-                "s3:PutBucketPolicy",
-                "s3:PutBucketPublicAccessBlock",
-                "s3:PutBucketRequestPayment",
-                "s3:PutBucketVersioning",
-                "s3:PutBucketWebsite",
-                "s3:PutEncryptionConfiguration",
-                "s3:PutIntelligentTieringConfiguration",
-                "s3:PutLifecycleConfiguration",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutReplicationConfiguration"
-            ],
-            "Resource": [
-                "*"
-            ]
-        }
-    ]
-}
-
-
-```
-<!-- END OF PRE-COMMIT-PIKE DOCS HOOK -->
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
 
@@ -211,3 +32,53 @@ No inputs.
 | <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | dynamodb table name |
 | <a name="output_state_bucket_name"></a> [state\_bucket\_name](#output\_state\_bucket\_name) | bucket name with id |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+## Our Other Projects
+
+We have a number of other projects that you might be interested in:
+
+  1. [terraform-aws-vpc](https://github.com/squareops/terraform-aws-vpc): Terraform module to create Networking resources for workload deployment on AWS Cloud.
+
+  2. [terraform-aws-keypair](https://github.com/squareops/terraform-aws-keypair): Terraform module which creates EC2 key pair on AWS. The private key will be stored on SSM.
+
+     Follow Us:
+
+     To stay updated on our projects and future release, follow us on
+     [GitHub](https://github.com/squareops/),
+     [LinkedIn](https://www.linkedin.com/company/squareops-technologies-pvt-ltd/)
+
+     By joining our both the [email](https://github.com/squareops) and [Slack community](https://github.com/squareops), you can benefit from the different ways in which we provide support. You can receive timely notifications and updates through email and engage in real-time conversations and discussions with other members through Slack. This combination of resources can help you stay informed, get help when you need it, and contribute to the project in a meaningful way.  
+
+## Security, Validation and pull-requests
+we have offered here high standard, quality code. Hence we are using several [pre-commit hooks](.pre-commit-config.yaml) and [GitHub Actions](https://gitlab.com/sq-ia/aws/eks/-/tree/v1.0.0#security-validation-and-pull-requests) as a workflow. So here we will create pull-requests to any branch and validate the request automatically using pre-commit tool.
+
+## License
+
+Apache License, Version 2.0, January 2004 (http://www.apache.org/licenses/).
+
+## Support Us
+
+To support a GitHub project by liking it, you can follow these steps:
+
+  1. Visit the repository: Navigate to the GitHub repository.
+
+  2. Click the "Star" [button](https://github.com/squareops/terraform-aws-vpc): On the repository page, you'll see a "Star" button in the upper right corner. Clicking on it will star the repository, indicating your support for the project.
+
+  3. Optionally, you can also leave a comment on the repository or open an issue to give feedback or suggest changes.
+
+Starring a repository on GitHub is a simple way to show your support and appreciation for the project. It also helps to increase the visibility of the project and make it more discoverable to others.
+
+## Who we are
+
+We believe that the key to success in the digital age is the ability to deliver value quickly and reliably. That’s why we offer a comprehensive range of DevOps & Cloud services designed to help your organization optimize its systems & Processes for speed and agility.
+
+  1. We are an AWS Advanced consulting partner which reflects our deep expertise in AWS Cloud and helping 100+ clients over the last 4 years.
+  2. Expertise in Kubernetes and overall container solution helps companies expedite their journey by 10X.
+  3. Infrastructure Automation is a key component to the success of our Clients and our Expertise helps deliver the same in the shortest time.
+  4. DevSecOps as a service to implement security within the overall DevOps process and helping companies deploy securely and at speed.
+  5. Platform engineering which supports scalable,Cost efficient infrastructure that supports rapid development, testing, and deployment.
+  6. 24*7 SRE service to help you Monitor the state of your infrastructure and eradicate any issue within the SLA.
+
+We provide [support](https://squareops.com/contact-us/) on all of our projects, no matter how small or large they may be.
+
+You can find more information about our company on this [squareops.com](https://squareops.com/), follow us on [linkdin](https://www.linkedin.com/company/squareops-technologies-pvt-ltd/), or fill out a [job application](https://squareops.com/careers/). If you have any questions or would like assistance with your cloud strategy and implementation, please don't hesitate to [contact us](https://squareops.com/contact-us/).
+

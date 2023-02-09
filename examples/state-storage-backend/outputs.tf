@@ -1,6 +1,6 @@
 output "bucket_region" {
   description = "In which region S3 bucket will create"
-  value       = var.region
+  value       = local.region
 }
 
 output "state_bucket_name" {
