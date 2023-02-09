@@ -1,15 +1,10 @@
-provider "aws" {
-  region = var.region
-}
-
-
 locals {
   tags = {
     Automation  = "true"
     Environment = var.environment
   }
 }
-
+data "aws_region" "region" {}
 data "aws_caller_identity" "current" {}
 
 resource "aws_kms_key" "mykey" {
