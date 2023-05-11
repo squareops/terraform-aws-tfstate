@@ -110,9 +110,8 @@ resource "aws_iam_role_policy_attachment" "s3_cloudtrail_policy_attachment" {
 module "log_bucket" {
   count                                 = var.logging ? 1 : 0
   source                                = "terraform-aws-modules/s3-bucket/aws"
-  version                               = "3.4.0"
+  version                               = "3.10.0"
   bucket                                = format("%s-%s-log-bucket", var.bucket_name, data.aws_caller_identity.current.account_id)
-  acl                                   = "log-delivery-write"
   force_destroy                         = true
   attach_elb_log_delivery_policy        = true
   attach_lb_log_delivery_policy         = true
@@ -240,4 +239,4 @@ data "aws_iam_policy_document" "default" {
     actions   = ["kms:CreateAlias"]
     resources = ["*"]
   }
-}
+} 

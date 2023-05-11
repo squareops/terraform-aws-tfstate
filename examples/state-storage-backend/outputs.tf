@@ -1,14 +1,19 @@
 output "bucket_region" {
-  description = "In which region S3 bucket will create"
+  description = "Specify the region in which an S3 bucket will be created by the module."
   value       = local.region
 }
 
 output "state_bucket_name" {
-  description = "bucket name with id"
+  description = "Name of the S3 bucket that will be used to store the Terraform state file."
   value       = module.backend.state_bucket_name
 }
 
 output "dynamodb_table_name" {
-  description = "dynamodb table name"
+  description = "Name of the DynamoDB table that will be used to manage locking and unlocking of the Terraform state file."
   value       = module.backend.dynamodb_table_name
+}
+
+output "log_bucket_name" {
+  description = "Name of the S3 bucket that will be used to store logs for this module."
+  value       = module.backend.log_bucket_name
 }
