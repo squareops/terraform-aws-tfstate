@@ -35,9 +35,12 @@ An Amazon S3 bucket and a DynamoDB table can be used as a remote backend to stor
 
 Security scanning is graciously provided by Prowler. Proowler is the leading fully hosted, cloud-native solution providing continuous cluster security and compliance.
 
-| Benchmark | Description |
-|--------|---------------|
-| Ensure that encryption is enabled for RDS instances | Enabled for RDS created using this module. |
+In this module, we have implemented the following CIS Compliance checks for S3:
+
+| Benchmark | Description | Status |
+|--------|---------------|--------|
+| Ensure S3 bucket access logging is enabled on the CloudTrail S3 bucket | Enabled for S3 created using this module. | &#x2714; |
+| Ensure the S3 bucket CloudTrail logs to is not publicly accessible | Enabled for S3 created using this module. | &#x2714; |
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
 
