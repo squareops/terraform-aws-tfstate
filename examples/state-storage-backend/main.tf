@@ -9,10 +9,10 @@ locals {
 }
 
 module "backend" {
-  source             = "../../"
+  source             = "squareops/tfstate/aws"
   logging            = true
   environment        = local.environment
-  bucket_name        = "production-tfstate-buckett" #unique global s3 bucket name
+  bucket_name        = "production-tfstate-bucket" #unique global s3 bucket name
   force_destroy      = true
   versioning_enabled = true
 }

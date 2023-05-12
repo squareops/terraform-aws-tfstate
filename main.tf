@@ -55,12 +55,12 @@ data "aws_iam_policy_document" "bucket_policy" {
 }
 
 module "s3_bucket" {
-  source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "3.10.0"
-  bucket        = format("%s-%s", var.bucket_name, data.aws_caller_identity.current.account_id)
-  force_destroy = var.force_destroy
-  attach_policy = true
-  policy        = data.aws_iam_policy_document.bucket_policy.json
+  source                                = "terraform-aws-modules/s3-bucket/aws"
+  version                               = "3.10.0"
+  bucket                                = format("%s-%s", var.bucket_name, data.aws_caller_identity.current.account_id)
+  force_destroy                         = var.force_destroy
+  attach_policy                         = true
+  policy                                = data.aws_iam_policy_document.bucket_policy.json
   attach_deny_insecure_transport_policy = true
   versioning = {
     enabled = var.versioning_enabled
