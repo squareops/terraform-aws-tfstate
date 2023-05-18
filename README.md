@@ -12,16 +12,15 @@ Terraform module to create Remote State Storage resources for workload deploymen
 ```hcl
 module "backend" {
   source = "squareops/tfstate/aws"
-
+  logging                                         = true
   environment                                     = "Production"
   bucket_name                                     = "tfstate"
   force_destroy                                   = true
   versioning_enabled                              = true
-  logging                                         = true
 }
 
 ```
-Refer [examples](https://github.com/squareops/terraform-aws-tfstate/tree/main/examples/state-storage-backend) for more details. 
+Refer [examples](https://github.com/squareops/terraform-aws-tfstate/tree/main/examples/state-storage-backend) for more details.
 
 ## IAM Permissions
 The required IAM permissions to create resources from this module can be found [here](https://github.com/squareops/terraform-aws-tfstate/blob/main/IAM.md)
@@ -60,8 +59,8 @@ In this module, we have implemented the following CIS Compliance checks for S3:
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_kms_key"></a> [kms\_key](#module\_kms\_key) | clouddrove/kms/aws | 0.15.0 |
-| <a name="module_log_bucket"></a> [log\_bucket](#module\_log\_bucket) | terraform-aws-modules/s3-bucket/aws | 3.4.0 |
-| <a name="module_s3_bucket"></a> [s3\_bucket](#module\_s3\_bucket) | terraform-aws-modules/s3-bucket/aws | 3.4.0 |
+| <a name="module_log_bucket"></a> [log\_bucket](#module\_log\_bucket) | terraform-aws-modules/s3-bucket/aws | 3.10.0 |
+| <a name="module_s3_bucket"></a> [s3\_bucket](#module\_s3\_bucket) | terraform-aws-modules/s3-bucket/aws | 3.10.0 |
 
 ## Resources
 
@@ -79,26 +78,25 @@ In this module, we have implemented the following CIS Compliance checks for S3:
 | [aws_iam_policy_document.bucket_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.cloudtrail_assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_region.region](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | bucket name | `string` | `""` | no |
-| <a name="input_environment"></a> [environment](#input\_environment) | Select enviroment type: dev, demo, prod | `string` | `"demo"` | no |
-| <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | Indicates all objects should be deleted from the bucket so that the bucket can be destroyed without error | `bool` | `false` | no |
-| <a name="input_logging"></a> [logging](#input\_logging) | Map containing access bucket logging configuration | `bool` | `false` | no |
-| <a name="input_region"></a> [region](#input\_region) | In which region S3 bucket will create | `string` | `""` | no |
-| <a name="input_versioning_enabled"></a> [versioning\_enabled](#input\_versioning\_enabled) | keeping multiple variants of an object in the same bucket | `bool` | `false` | no |
+| <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | Name of the S3 bucket to be created. | `string` | `""` | no |
+| <a name="input_environment"></a> [environment](#input\_environment) | Specify the type of environment(dev, demo, prod) in which the S3 bucket will be created. | `string` | `"demo"` | no |
+| <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | Whether or not to delete all objects from the bucket to allow for destruction of the bucket without error. | `bool` | `false` | no |
+| <a name="input_logging"></a> [logging](#input\_logging) | Configuration for S3 bucket access logging. | `bool` | `true` | no |
+| <a name="input_versioning_enabled"></a> [versioning\_enabled](#input\_versioning\_enabled) | Whether or not to enable versioning for the S3 bucket, which allows multiple versions of an object to be stored in the same bucket. | `bool` | `false` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_bucket_region"></a> [bucket\_region](#output\_bucket\_region) | In which region S3 bucket will create |
-| <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | dynamodb table name |
-| <a name="output_log_bucket_name"></a> [log\_bucket\_name](#output\_log\_bucket\_name) | logging table name |
-| <a name="output_state_bucket_name"></a> [state\_bucket\_name](#output\_state\_bucket\_name) | bucket name with id |
+| <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | Name of the DynamoDB table that will be used to manage locking and unlocking of the Terraform state file. |
+| <a name="output_log_bucket_name"></a> [log\_bucket\_name](#output\_log\_bucket\_name) | Name of the S3 bucket that will be used to store logs for this module. |
+| <a name="output_state_bucket_name"></a> [state\_bucket\_name](#output\_state\_bucket\_name) | Specify the region in which an S3 bucket will be created by the module. |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 
 ## Contribution & Issue Reporting
@@ -107,7 +105,7 @@ To report an issue with a project:
 
   1. Check the repository's [issue tracker](https://github.com/squareops/terraform-aws-tfstate/issues) on GitHub
   2. Search to see if the issue has already been reported
-  3. If you can't find an answer to your question in the documentation or issue tracker, you can ask a question by creating a new issue. Make sure to provide enough context and details . 
+  3. If you can't find an answer to your question in the documentation or issue tracker, you can ask a question by creating a new issue. Make sure to provide enough context and details .
 
 ## License
 
@@ -139,4 +137,3 @@ We believe that the key to success in the digital age is the ability to deliver 
 We provide [support](https://squareops.com/contact-us/) on all of our projects, no matter how small or large they may be.
 
 You can find more information about our company on this [squareops.com](https://squareops.com/), follow us on [Linkedin](https://www.linkedin.com/company/squareops-technologies-pvt-ltd/), or fill out a [job application](https://squareops.com/careers/). If you have any questions or would like assistance with your cloud strategy and implementation, please don't hesitate to [contact us](https://squareops.com/contact-us/).
-

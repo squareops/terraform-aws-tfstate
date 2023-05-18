@@ -3,8 +3,8 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.13 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | 3.50.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.9 |
 
 ## Providers
 
@@ -14,7 +14,7 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_backend"></a> [backend](#module\_backend) | ../../ | n/a |
+| <a name="module_backend"></a> [backend](#module\_backend) | squareops/tfstate/aws | n/a |
 
 ## Resources
 
@@ -28,9 +28,10 @@ No inputs.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_bucket_region"></a> [bucket\_region](#output\_bucket\_region) | In which region S3 bucket will create |
-| <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | dynamodb table name |
-| <a name="output_state_bucket_name"></a> [state\_bucket\_name](#output\_state\_bucket\_name) | bucket name with id |
+| <a name="output_bucket_region"></a> [bucket\_region](#output\_bucket\_region) | Specify the region in which an S3 bucket will be created by the module. |
+| <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | Name of the DynamoDB table that will be used to manage locking and unlocking of the Terraform state file. |
+| <a name="output_log_bucket_name"></a> [log\_bucket\_name](#output\_log\_bucket\_name) | Name of the S3 bucket that will be used to store logs for this module. |
+| <a name="output_state_bucket_name"></a> [state\_bucket\_name](#output\_state\_bucket\_name) | Name of the S3 bucket that will be used to store the Terraform state file. |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Our Other Projects
 
@@ -81,4 +82,3 @@ We believe that the key to success in the digital age is the ability to deliver 
 We provide [support](https://squareops.com/contact-us/) on all of our projects, no matter how small or large they may be.
 
 You can find more information about our company on this [squareops.com](https://squareops.com/), follow us on [linkdin](https://www.linkedin.com/company/squareops-technologies-pvt-ltd/), or fill out a [job application](https://squareops.com/careers/). If you have any questions or would like assistance with your cloud strategy and implementation, please don't hesitate to [contact us](https://squareops.com/contact-us/).
-

@@ -55,18 +55,13 @@ data "aws_iam_policy_document" "bucket_policy" {
 }
 
 module "s3_bucket" {
-  source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "3.4.0"
-
-  bucket        = format("%s-%s", var.bucket_name, data.aws_caller_identity.current.account_id)
-  acl           = "private"
-  force_destroy = var.force_destroy
-
-  attach_policy = true
-  policy        = data.aws_iam_policy_document.bucket_policy.json
-
+  source                                = "terraform-aws-modules/s3-bucket/aws"
+  version                               = "3.10.0"
+  bucket                                = format("%s-%s", var.bucket_name, data.aws_caller_identity.current.account_id)
+  force_destroy                         = var.force_destroy
+  attach_policy                         = true
+  policy                                = data.aws_iam_policy_document.bucket_policy.json
   attach_deny_insecure_transport_policy = true
-
   versioning = {
     enabled = var.versioning_enabled
   }
@@ -92,8 +87,8 @@ module "s3_bucket" {
   restrict_public_buckets = true
 
   # S3 Bucket Ownership Controls
-  control_object_ownership = false
-  object_ownership         = "bucket-owner-full-control"
+  control_object_ownership = true
+  object_ownership         = "BucketOwnerPreferred"
 }
 
 resource "aws_dynamodb_table" "dynamodb_table" {

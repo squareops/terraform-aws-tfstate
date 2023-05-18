@@ -4,7 +4,7 @@
 The Policy required is:
 
 ```json
- { 
+ {
     "Version": "2012-10-17",
     "Statement": [
         {

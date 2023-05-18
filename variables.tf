@@ -1,29 +1,29 @@
 variable "bucket_name" {
-  description = "bucket name"
+  description = "Name of the S3 bucket to be created."
   default     = ""
   type        = string
 }
 
 variable "force_destroy" {
-  description = "Indicates all objects should be deleted from the bucket so that the bucket can be destroyed without error"
+  description = "Whether or not to delete all objects from the bucket to allow for destruction of the bucket without error."
   default     = false
   type        = bool
 }
 
 variable "versioning_enabled" {
-  description = "keeping multiple variants of an object in the same bucket"
+  description = "Whether or not to enable versioning for the S3 bucket, which allows multiple versions of an object to be stored in the same bucket."
   default     = false
   type        = bool
 }
 
 variable "logging" {
-  description = "Map containing access bucket logging configuration"
+  description = "Configuration for S3 bucket access logging."
   default     = true
   type        = bool
 }
 
 variable "environment" {
-  description = "Select enviroment type: dev, demo, prod"
+  description = "Specify the type of environment(dev, demo, prod) in which the S3 bucket will be created. "
   default     = "demo"
   type        = string
 }
