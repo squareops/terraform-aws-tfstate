@@ -7,8 +7,8 @@ resource "aws_cloudtrail" "s3_cloudtrail" {
   include_global_service_events = false
   enable_logging                = true
   enable_log_file_validation    = true
-  cloud_watch_logs_role_arn     = aws_iam_role.s3_cloudtrail_cloudwatch_role[0].arn
-  cloud_watch_logs_group_arn    = "${aws_cloudwatch_log_group.s3_cloudwatch[0].arn}:*"
+  cloud_watch_logs_role_arn     = var.cloudwatch_logging ? aws_iam_role.s3_cloudtrail_cloudwatch_role[0].arn : null
+  cloud_watch_logs_group_arn    = var.cloudwatch_logging ? "${aws_cloudwatch_log_group.s3_cloudwatch[0].arn}:*" : null
   kms_key_id                    = module.kms_key[0].key_arn
   event_selector {
     read_write_type           = "All"
@@ -16,6 +16,10 @@ resource "aws_cloudtrail" "s3_cloudtrail" {
     data_resource {
       type   = "AWS::S3::Object"
       values = ["arn:aws:s3"]
+    }
+    data_resource {
+      type   = "AWS::Lambda::Function"
+      values = ["arn:aws:lambda"]
     }
   }
   tags = merge(
@@ -25,12 +29,9 @@ resource "aws_cloudtrail" "s3_cloudtrail" {
 }
 
 resource "aws_cloudwatch_log_group" "s3_cloudwatch" {
-  count      = var.logging ? 1 : 0
+  count      = var.logging && var.cloudwatch_logging ? 1 : 0
   name       = format("%s-%s-S3", var.bucket_name, data.aws_caller_identity.current.account_id)
   kms_key_id = module.kms_key[0].key_arn
-  provisioner "local-exec" {
-    command = "sleep 10"
-  }
   tags = merge(
     { "Name" = format("%s-%s-S3", var.bucket_name, data.aws_caller_identity.current.account_id) },
     local.tags,
@@ -38,7 +39,7 @@ resource "aws_cloudwatch_log_group" "s3_cloudwatch" {
 }
 
 resource "aws_iam_role" "s3_cloudtrail_cloudwatch_role" {
-  count              = var.logging ? 1 : 0
+  count              = var.logging && var.cloudwatch_logging ? 1 : 0
   name               = format("%s-cloudtrail-cloudwatch-S3", var.bucket_name)
   assume_role_policy = data.aws_iam_policy_document.cloudtrail_assume_role[0].json
   tags = merge(
@@ -61,7 +62,7 @@ data "aws_iam_policy_document" "cloudtrail_assume_role" {
 }
 
 resource "aws_iam_policy" "s3_cloudtrail_cloudwatch_policy" {
-  count  = var.logging ? 1 : 0
+  count  = var.logging && var.cloudwatch_logging ? 1 : 0
   name   = format("%s-cloudtrail-cloudwatch-S3", var.bucket_name)
   policy = <<EOF
 {
@@ -99,7 +100,7 @@ EOF
 
 
 resource "aws_iam_role_policy_attachment" "s3_cloudtrail_policy_attachment" {
-  count      = var.logging ? 1 : 0
+  count      = var.logging && var.cloudwatch_logging ? 1 : 0
   role       = aws_iam_role.s3_cloudtrail_cloudwatch_role[0].name
   policy_arn = aws_iam_policy.s3_cloudtrail_cloudwatch_policy[0].arn
 }
@@ -189,7 +190,7 @@ data "aws_iam_policy_document" "default" {
     condition {
       test     = "StringLike"
       variable = "kms:EncryptionContext:aws:cloudtrail:arn"
-      values   = ["arn:aws:cloudtrail:*:XXXXXXXXXXXX:trail/*"]
+      values   = ["arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"]
     }
   }
 
@@ -220,12 +221,12 @@ data "aws_iam_policy_document" "default" {
       test     = "StringEquals"
       variable = "kms:CallerAccount"
       values = [
-      "XXXXXXXXXXXX"]
+      "${data.aws_caller_identity.current.account_id}"]
     }
     condition {
       test     = "StringLike"
       variable = "kms:EncryptionContext:aws:cloudtrail:arn"
-      values   = ["arn:aws:cloudtrail:*:XXXXXXXXXXXX:trail/*"]
+      values   = ["arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"]
     }
   }
 

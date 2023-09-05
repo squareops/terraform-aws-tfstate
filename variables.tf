@@ -27,3 +27,9 @@ variable "environment" {
   default     = "demo"
   type        = string
 }
+
+variable "cloudwatch_logging" {
+  description = "Configuration for CloudWatch log group logging."
+  default     = true
+  type        = bool
+}
