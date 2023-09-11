@@ -32,6 +32,7 @@ resource "aws_cloudwatch_log_group" "s3_cloudwatch" {
   count      = var.logging && var.cloudwatch_logging ? 1 : 0
   name       = format("%s-%s-S3", var.bucket_name, data.aws_caller_identity.current.account_id)
   kms_key_id = module.kms_key[0].key_arn
+  retention_in_days = var.cw_retention_days
   tags = merge(
     { "Name" = format("%s-%s-S3", var.bucket_name, data.aws_caller_identity.current.account_id) },
     local.tags,
@@ -122,6 +123,22 @@ module "log_bucket" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+  lifecycle_rule = [
+    {
+      id      = "log"
+      enabled = var.enable_lifecycle_rule
+
+      transition = [
+        {
+          days          = var.s3_ia_retention_days
+          storage_class = "ONEZONE_IA"
+          }, {
+          days          = var.s3_galcier_retention_days
+          storage_class = "GLACIER"
+        }
+      ]
+    }
+    ]
   attach_policy           = true
   policy                  = <<POLICY
 {

@@ -33,3 +33,27 @@ variable "cloudwatch_logging" {
   default     = true
   type        = bool
 }
+
+variable "cw_retention_days" {
+  description = "Cloudatch log group retention period in days"
+  default = 90
+  type = number
+}
+
+variable "s3_galcier_retention_days" {
+  description = "S3 log data retention period moved to Glacier"
+  default = 180
+  type = number
+}
+
+variable "s3_ia_retention_days" {
+  description = "S3 log data retention period moved to IA"
+  default = 90
+  type = number
+}
+
+variable "enable_lifecycle_rule" {
+  description = "Whether to enable lifecycle rule"
+  default = true
+  type = bool
+}
