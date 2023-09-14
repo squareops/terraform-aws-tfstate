@@ -14,7 +14,7 @@ module "backend" {
   source                       = "squareops/tfstate/aws"
   logging                      = true
   bucket_name                  = "production-tfstate-bucket" #unique global s3 bucket name
-  environment                  = local.environment
+  environment                  = "prod"
   force_destroy                = true
   versioning_enabled           = true
   cloudwatch_logging_enabled   = true
