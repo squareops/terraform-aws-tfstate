@@ -1,6 +1,6 @@
 output "bucket_region" {
   description = "Specify the region in which an S3 bucket will be created by the module."
-  value       = local.region
+  value       = module.backend.region
 }
 
 output "state_bucket_name" {

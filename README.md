@@ -11,12 +11,17 @@ Terraform module to create Remote State Storage resources for workload deploymen
 
 ```hcl
 module "backend" {
-  source = "squareops/tfstate/aws"
-  logging                                         = true
-  environment                                     = "Production"
-  bucket_name                                     = "tfstate"
-  force_destroy                                   = true
-  versioning_enabled                              = true
+  source                       = "squareops/tfstate/aws"
+  logging                      = true
+  bucket_name                  = "production-tfstate-bucket" #unique global s3 bucket name
+  environment                  = "prod"
+  force_destroy                = true
+  versioning_enabled           = true
+  cloudwatch_logging_enabled   = true
+  log_retention_in_days        = 90
+  log_bucket_lifecycle_enabled = true
+  s3_ia_retention_in_days      = 90
+  s3_galcier_retention_in_days = 180
 }
 
 ```
@@ -29,6 +34,9 @@ The required IAM permissions to create resources from this module can be found [
 Terraform state locking is a mechanism used to prevent multiple users from simultaneously making changes to the same Terraform state, which could result in conflicts and data loss. A state lock is acquired and maintained by Terraform while it is making changes to the state, and other instances of Terraform are unable to make changes until the lock is released.
 
 An Amazon S3 bucket and a DynamoDB table can be used as a remote backend to store and manage the Terraform state file, and also to implement state locking. The S3 bucket is used to store the state file, while the DynamoDB table is used to store the lock information, such as who acquired the lock and when. Terraform will check the lock state in the DynamoDB table before making changes to the state file in the S3 bucket, and will wait or retry if the lock is already acquired by another instance. This provides a centralized and durable mechanism for managing the Terraform state and ensuring that changes are made in a controlled and safe manner.
+
+Additionally, you may have a log bucket configured to store CloudTrail and CloudWatch logs. This log bucket can have a bucket lifecycle policy in place to automatically manage the lifecycle of log data. For example, log data can be transitioned to Amazon S3 Glacier for long-term storage after a certain period, and eventually to Amazon S3 Infrequent Access storage. This helps in optimizing storage costs and ensures that log data is retained according to your organization's compliance requirements.
+
 
 ## Security & Compliance [<img src="	https://prowler.pro/wp-content/themes/prowler-pro/assets/img/logo.svg" width="250" align="right" />](https://prowler.pro/)
 
@@ -85,17 +93,23 @@ In this module, we have implemented the following CIS Compliance checks for S3:
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | Name of the S3 bucket to be created. | `string` | `""` | no |
-| <a name="input_environment"></a> [environment](#input\_environment) | Specify the type of environment(dev, demo, prod) in which the S3 bucket will be created. | `string` | `"demo"` | no |
+| <a name="input_cloudwatch_logging_enabled"></a> [cloudwatch\_logging\_enabled](#input\_cloudwatch\_logging\_enabled) | Enable or disable CloudWatch log group logging. | `bool` | `true` | no |
+| <a name="input_environment"></a> [environment](#input\_environment) | Specify the type of environment(dev, demo, prod) in which the S3 bucket will be created. | `string` | `""` | no |
 | <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | Whether or not to delete all objects from the bucket to allow for destruction of the bucket without error. | `bool` | `false` | no |
+| <a name="input_log_bucket_lifecycle_enabled"></a> [log\_bucket\_lifecycle\_enabled](#input\_log\_bucket\_lifecycle\_enabled) | Enable or disable the S3 bucket's lifecycle rule for log data. | `bool` | `true` | no |
+| <a name="input_log_retention_in_days"></a> [log\_retention\_in\_days](#input\_log\_retention\_in\_days) | Retention period (in days) for CloudWatch log groups. | `number` | `90` | no |
 | <a name="input_logging"></a> [logging](#input\_logging) | Configuration for S3 bucket access logging. | `bool` | `true` | no |
+| <a name="input_s3_galcier_retention_in_days"></a> [s3\_galcier\_retention\_in\_days](#input\_s3\_galcier\_retention\_in\_days) | Retention period (in days) for moving S3 log data to Glacier storage. | `number` | `180` | no |
+| <a name="input_s3_ia_retention_in_days"></a> [s3\_ia\_retention\_in\_days](#input\_s3\_ia\_retention\_in\_days) | Retention period (in days) for moving S3 log data to Infrequent Access storage. | `number` | `90` | no |
 | <a name="input_versioning_enabled"></a> [versioning\_enabled](#input\_versioning\_enabled) | Whether or not to enable versioning for the S3 bucket, which allows multiple versions of an object to be stored in the same bucket. | `bool` | `false` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | Name of the DynamoDB table that will be used to manage locking and unlocking of the Terraform state file. |
-| <a name="output_log_bucket_name"></a> [log\_bucket\_name](#output\_log\_bucket\_name) | Name of the S3 bucket that will be used to store logs for this module. |
+| <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | Name of the DynamoDB table that will be used to manage locking and unlocking of the terraform state file. |
+| <a name="output_log_bucket_name"></a> [log\_bucket\_name](#output\_log\_bucket\_name) | Name of the S3 bucket that will be used to store logs. |
+| <a name="output_region"></a> [region](#output\_region) | Name of the region in which Cloudtrail is created |
 | <a name="output_state_bucket_name"></a> [state\_bucket\_name](#output\_state\_bucket\_name) | Specify the region in which an S3 bucket will be created by the module. |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 
