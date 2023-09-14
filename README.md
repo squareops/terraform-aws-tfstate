@@ -35,6 +35,9 @@ Terraform state locking is a mechanism used to prevent multiple users from simul
 
 An Amazon S3 bucket and a DynamoDB table can be used as a remote backend to store and manage the Terraform state file, and also to implement state locking. The S3 bucket is used to store the state file, while the DynamoDB table is used to store the lock information, such as who acquired the lock and when. Terraform will check the lock state in the DynamoDB table before making changes to the state file in the S3 bucket, and will wait or retry if the lock is already acquired by another instance. This provides a centralized and durable mechanism for managing the Terraform state and ensuring that changes are made in a controlled and safe manner.
 
+Additionally, you may have a log bucket configured to store CloudTrail and CloudWatch logs. This log bucket can have a bucket lifecycle policy in place to automatically manage the lifecycle of log data. For example, log data can be transitioned to Amazon S3 Glacier for long-term storage after a certain period, and eventually to Amazon S3 Infrequent Access storage. This helps in optimizing storage costs and ensures that log data is retained according to your organization's compliance requirements.
+
+
 ## Security & Compliance [<img src="	https://prowler.pro/wp-content/themes/prowler-pro/assets/img/logo.svg" width="250" align="right" />](https://prowler.pro/)
 
 Security scanning is graciously provided by Prowler. Proowler is the leading fully hosted, cloud-native solution providing continuous cluster security and compliance.
