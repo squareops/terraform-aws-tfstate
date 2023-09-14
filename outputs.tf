@@ -15,5 +15,5 @@ output "log_bucket_name" {
 
 output "region" {
   description = "Name of the region in which Cloudtrail is created"
-  value = var.logging ? aws_cloudtrail.s3_cloudtrail[0].home_region : null
+  value       = var.logging ? aws_cloudtrail.s3_cloudtrail[0].home_region : null
 }

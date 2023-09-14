@@ -29,9 +29,9 @@ resource "aws_cloudtrail" "s3_cloudtrail" {
 }
 
 resource "aws_cloudwatch_log_group" "s3_cloudwatch" {
-  count      = var.logging && var.cloudwatch_logging_enabled ? 1 : 0
-  name       = format("%s-%s-S3", var.bucket_name, data.aws_caller_identity.current.account_id)
-  kms_key_id = module.kms_key[0].key_arn
+  count             = var.logging && var.cloudwatch_logging_enabled ? 1 : 0
+  name              = format("%s-%s-S3", var.bucket_name, data.aws_caller_identity.current.account_id)
+  kms_key_id        = module.kms_key[0].key_arn
   retention_in_days = var.log_retention_in_days
   tags = merge(
     { "Name" = format("%s-%s-S3", var.bucket_name, data.aws_caller_identity.current.account_id) },
@@ -138,9 +138,9 @@ module "log_bucket" {
         }
       ]
     }
-    ]
-  attach_policy           = true
-  policy                  = <<POLICY
+  ]
+  attach_policy = true
+  policy        = <<POLICY
 {
     "Version": "2012-10-17",
     "Statement": [
