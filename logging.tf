@@ -7,8 +7,8 @@ resource "aws_cloudtrail" "s3_cloudtrail" {
   include_global_service_events = false
   enable_logging                = true
   enable_log_file_validation    = true
-  cloud_watch_logs_role_arn     = var.cloudwatch_logging ? aws_iam_role.s3_cloudtrail_cloudwatch_role[0].arn : null
-  cloud_watch_logs_group_arn    = var.cloudwatch_logging ? "${aws_cloudwatch_log_group.s3_cloudwatch[0].arn}:*" : null
+  cloud_watch_logs_role_arn     = var.cloudwatch_logging_enabled ? aws_iam_role.s3_cloudtrail_cloudwatch_role[0].arn : null
+  cloud_watch_logs_group_arn    = var.cloudwatch_logging_enabled ? "${aws_cloudwatch_log_group.s3_cloudwatch[0].arn}:*" : null
   kms_key_id                    = module.kms_key[0].key_arn
   event_selector {
     read_write_type           = "All"
@@ -29,10 +29,10 @@ resource "aws_cloudtrail" "s3_cloudtrail" {
 }
 
 resource "aws_cloudwatch_log_group" "s3_cloudwatch" {
-  count      = var.logging && var.cloudwatch_logging ? 1 : 0
+  count      = var.logging && var.cloudwatch_logging_enabled ? 1 : 0
   name       = format("%s-%s-S3", var.bucket_name, data.aws_caller_identity.current.account_id)
   kms_key_id = module.kms_key[0].key_arn
-  retention_in_days = var.cw_retention_days
+  retention_in_days = var.log_retention_in_days
   tags = merge(
     { "Name" = format("%s-%s-S3", var.bucket_name, data.aws_caller_identity.current.account_id) },
     local.tags,
@@ -40,7 +40,7 @@ resource "aws_cloudwatch_log_group" "s3_cloudwatch" {
 }
 
 resource "aws_iam_role" "s3_cloudtrail_cloudwatch_role" {
-  count              = var.logging && var.cloudwatch_logging ? 1 : 0
+  count              = var.logging && var.cloudwatch_logging_enabled ? 1 : 0
   name               = format("%s-cloudtrail-cloudwatch-S3", var.bucket_name)
   assume_role_policy = data.aws_iam_policy_document.cloudtrail_assume_role[0].json
   tags = merge(
@@ -63,7 +63,7 @@ data "aws_iam_policy_document" "cloudtrail_assume_role" {
 }
 
 resource "aws_iam_policy" "s3_cloudtrail_cloudwatch_policy" {
-  count  = var.logging && var.cloudwatch_logging ? 1 : 0
+  count  = var.logging && var.cloudwatch_logging_enabled ? 1 : 0
   name   = format("%s-cloudtrail-cloudwatch-S3", var.bucket_name)
   policy = <<EOF
 {
@@ -101,13 +101,10 @@ EOF
 
 
 resource "aws_iam_role_policy_attachment" "s3_cloudtrail_policy_attachment" {
-  count      = var.logging && var.cloudwatch_logging ? 1 : 0
+  count      = var.logging && var.cloudwatch_logging_enabled ? 1 : 0
   role       = aws_iam_role.s3_cloudtrail_cloudwatch_role[0].name
   policy_arn = aws_iam_policy.s3_cloudtrail_cloudwatch_policy[0].arn
 }
-
-
-
 
 module "log_bucket" {
   count                                 = var.logging ? 1 : 0
@@ -118,6 +115,9 @@ module "log_bucket" {
   attach_elb_log_delivery_policy        = true
   attach_lb_log_delivery_policy         = true
   attach_deny_insecure_transport_policy = true
+  versioning = {
+    enabled = var.versioning_enabled
+  }
   # S3 bucket-level Public Access Block configuration
   block_public_acls       = true
   block_public_policy     = true
@@ -126,14 +126,14 @@ module "log_bucket" {
   lifecycle_rule = [
     {
       id      = "log"
-      enabled = var.enable_lifecycle_rule
+      enabled = var.log_bucket_lifecycle_enabled
 
       transition = [
         {
-          days          = var.s3_ia_retention_days
+          days          = var.s3_ia_retention_in_days
           storage_class = "ONEZONE_IA"
           }, {
-          days          = var.s3_galcier_retention_days
+          days          = var.s3_galcier_retention_in_days
           storage_class = "GLACIER"
         }
       ]
