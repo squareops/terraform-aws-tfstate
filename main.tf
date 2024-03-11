@@ -1,18 +1,9 @@
-locals {
-  tags = {
-    Automation  = "true"
-    Environment = var.environment
-  }
-}
-data "aws_region" "region" {}
-data "aws_caller_identity" "current" {}
-
 resource "aws_kms_key" "mykey" {
   description             = "This key is used to encrypt bucket objects"
-  deletion_window_in_days = 10
+  deletion_window_in_days = var.kms_deletion_window_in_days
   tags = merge(
-    { "Name" = format("%s-%s", var.environment, var.bucket_name) },
-    local.tags,
+    { "Name" = format("%s-%s", var.environment, var.s3_bucket_name) },
+    var.additional_tags,
   )
 }
 resource "aws_iam_role" "this" {
@@ -32,8 +23,8 @@ resource "aws_iam_role" "this" {
 }
 EOF
   tags = merge(
-    { "Name" = format("%s-%s", var.environment, var.bucket_name) },
-    local.tags,
+    { "Name" = format("%s-%s", var.environment, var.s3_bucket_name) },
+    var.additional_tags,
   )
 }
 
@@ -49,7 +40,7 @@ data "aws_iam_policy_document" "bucket_policy" {
     ]
 
     resources = [
-      "arn:aws:s3:::${format("%s-%s", var.bucket_name, data.aws_caller_identity.current.account_id)}",
+      "arn:aws:s3:::${format("%s-%s", var.s3_bucket_name, var.aws_account_id)}",
     ]
   }
 }
@@ -57,13 +48,13 @@ data "aws_iam_policy_document" "bucket_policy" {
 module "s3_bucket" {
   source                                = "terraform-aws-modules/s3-bucket/aws"
   version                               = "3.10.0"
-  bucket                                = format("%s-%s", var.bucket_name, data.aws_caller_identity.current.account_id)
-  force_destroy                         = var.force_destroy
-  attach_policy                         = true
+  bucket                                = format("%s-%s", var.s3_bucket_name, var.aws_account_id)
+  force_destroy                         = var.s3_bucket_force_destroy
+  attach_policy                         = var.s3_bucket_attach_policy
   policy                                = data.aws_iam_policy_document.bucket_policy.json
-  attach_deny_insecure_transport_policy = true
+  attach_deny_insecure_transport_policy = var.s3_bucket_attach_deny_insecure_transport_policy
   versioning = {
-    enabled = var.versioning_enabled
+    enabled = var.s3_bucket_versioning_enabled
   }
 
   server_side_encryption_configuration = {
@@ -75,35 +66,35 @@ module "s3_bucket" {
     }
   }
 
-  logging = var.logging ? {
+  logging = var.s3_bucket_logging ? {
     target_bucket = module.log_bucket[0].s3_bucket_id
     target_prefix = "log/"
   } : {}
 
   # S3 bucket-level Public Access Block configuration
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  block_public_acls       = var.s3_bucket_block_public_acls
+  block_public_policy     = var.s3_bucket_block_public_policy
+  ignore_public_acls      = var.s3_bucket_ignore_public_acls
+  restrict_public_buckets = var.s3_bucket_restrict_public_buckets
 
   # S3 Bucket Ownership Controls
-  control_object_ownership = true
-  object_ownership         = "BucketOwnerPreferred"
+  control_object_ownership = var.s3_bucket_control_object_ownership
+  object_ownership         = var.s3_bucket_object_ownership
 }
 
 resource "aws_dynamodb_table" "dynamodb_table" {
-  name           = format("%s-%s-%s", var.bucket_name, "lock-dynamodb", data.aws_caller_identity.current.account_id)
+  name           = format("%s-%s-%s", var.s3_bucket_name, "lock-dynamodb", var.aws_account_id)
   hash_key       = "LockID"
-  read_capacity  = 20
-  write_capacity = 20
+  read_capacity  = var.dynamodb_read_capacity
+  write_capacity = var.dynamodb_write_capacity
 
   attribute {
-    name = "LockID"
-    type = "S"
+    name = var.name
+    type = var.type
   }
 
   tags = merge(
-    { "Name" = format("%s-%s-%s", var.bucket_name, "lock-dynamodb", data.aws_caller_identity.current.account_id) },
-    local.tags,
+    { "Name" = format("%s-%s-%s", var.s3_bucket_name, "lock-dynamodb", var.aws_account_id) },
+    var.additional_tags,
   )
 }

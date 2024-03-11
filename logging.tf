@@ -1,18 +1,18 @@
 resource "aws_cloudtrail" "s3_cloudtrail" {
-  count                         = var.logging ? 1 : 0
+  count                         = var.s3_bucket_logging ? 1 : 0
   depends_on                    = [aws_iam_role_policy_attachment.s3_cloudtrail_policy_attachment]
-  name                          = format("%s-%s-S3", var.bucket_name, data.aws_caller_identity.current.account_id)
+  name                          = format("%s-%s-S3", var.s3_bucket_name, var.aws_account_id)
   s3_bucket_name                = module.log_bucket[0].s3_bucket_id
   s3_key_prefix                 = "log"
-  include_global_service_events = false
-  enable_logging                = true
-  enable_log_file_validation    = true
+  include_global_service_events = var.s3_bucket_include_global_service_events
+  enable_logging                = var.cloudtrail_enable_logging
+  enable_log_file_validation    = var.cloudtrail_enable_log_file_validation
   cloud_watch_logs_role_arn     = var.cloudwatch_logging_enabled ? aws_iam_role.s3_cloudtrail_cloudwatch_role[0].arn : null
   cloud_watch_logs_group_arn    = var.cloudwatch_logging_enabled ? "${aws_cloudwatch_log_group.s3_cloudwatch[0].arn}:*" : null
   kms_key_id                    = module.kms_key[0].key_arn
   event_selector {
     read_write_type           = "All"
-    include_management_events = true
+    include_management_events = var.s3_bucket_include_management_events
     data_resource {
       type   = "AWS::S3::Object"
       values = ["arn:aws:s3"]
@@ -23,34 +23,34 @@ resource "aws_cloudtrail" "s3_cloudtrail" {
     }
   }
   tags = merge(
-    { "Name" = format("%s-%s-S3", var.bucket_name, data.aws_caller_identity.current.account_id) },
-    local.tags,
+    { "Name" = format("%s-%s-S3", var.s3_bucket_name, var.aws_account_id) },
+    var.additional_tags,
   )
 }
 
 resource "aws_cloudwatch_log_group" "s3_cloudwatch" {
-  count             = var.logging && var.cloudwatch_logging_enabled ? 1 : 0
-  name              = format("%s-%s-S3", var.bucket_name, data.aws_caller_identity.current.account_id)
+  count             = var.s3_bucket_logging && var.cloudwatch_logging_enabled ? 1 : 0
+  name              = format("%s-%s-S3", var.s3_bucket_name, var.aws_account_id)
   kms_key_id        = module.kms_key[0].key_arn
-  retention_in_days = var.log_retention_in_days
+  retention_in_days = var.cloudwatch_log_retention_in_days
   tags = merge(
-    { "Name" = format("%s-%s-S3", var.bucket_name, data.aws_caller_identity.current.account_id) },
-    local.tags,
+    { "Name" = format("%s-%s-S3", var.s3_bucket_name, var.aws_account_id) },
+    var.additional_tags,
   )
 }
 
 resource "aws_iam_role" "s3_cloudtrail_cloudwatch_role" {
-  count              = var.logging && var.cloudwatch_logging_enabled ? 1 : 0
-  name               = format("%s-cloudtrail-cloudwatch-S3", var.bucket_name)
+  count              = var.s3_bucket_logging && var.cloudwatch_logging_enabled ? 1 : 0
+  name               = format("%s-cloudtrail-cloudwatch-S3", var.s3_bucket_name)
   assume_role_policy = data.aws_iam_policy_document.cloudtrail_assume_role[0].json
   tags = merge(
-    { "Name" = format("%s-cloudtrail-cloudwatch-S3", var.bucket_name) },
-    local.tags,
+    { "Name" = format("%s-cloudtrail-cloudwatch-S3", var.s3_bucket_name) },
+    var.additional_tags,
   )
 }
 
 data "aws_iam_policy_document" "cloudtrail_assume_role" {
-  count = var.logging ? 1 : 0
+  count = var.s3_bucket_logging ? 1 : 0
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
@@ -63,8 +63,8 @@ data "aws_iam_policy_document" "cloudtrail_assume_role" {
 }
 
 resource "aws_iam_policy" "s3_cloudtrail_cloudwatch_policy" {
-  count  = var.logging && var.cloudwatch_logging_enabled ? 1 : 0
-  name   = format("%s-cloudtrail-cloudwatch-S3", var.bucket_name)
+  count  = var.s3_bucket_logging && var.cloudwatch_logging_enabled ? 1 : 0
+  name   = format("%s-cloudtrail-cloudwatch-S3", var.s3_bucket_name)
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -76,7 +76,7 @@ resource "aws_iam_policy" "s3_cloudtrail_cloudwatch_policy" {
         "logs:CreateLogStream"
       ],
       "Resource": [
-        "arn:aws:logs:${data.aws_region.region.name}:${data.aws_caller_identity.current.account_id}:log-group:${var.bucket_name}-${data.aws_caller_identity.current.account_id}-S3:log-stream:*"
+        "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:${var.s3_bucket_name}-${var.aws_account_id}-S3:log-stream:*"
       ]
     },
     {
@@ -86,47 +86,47 @@ resource "aws_iam_policy" "s3_cloudtrail_cloudwatch_policy" {
         "logs:PutLogEvents"
       ],
       "Resource": [
-        "arn:aws:logs:${data.aws_region.region.name}:${data.aws_caller_identity.current.account_id}:log-group:${var.bucket_name}-${data.aws_caller_identity.current.account_id}-S3:log-stream:*"
+        "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:${var.s3_bucket_name}-${var.aws_account_id}-S3:log-stream:*"
       ]
     }
   ]
 }
 EOF
   tags = merge(
-    { "Name" = format("%s-cloudtrail-cloudwatch-S3", var.bucket_name) },
-    local.tags,
+    { "Name" = format("%s-cloudtrail-cloudwatch-S3", var.s3_bucket_name) },
+    var.additional_tags,
   )
 }
 
 
 
 resource "aws_iam_role_policy_attachment" "s3_cloudtrail_policy_attachment" {
-  count      = var.logging && var.cloudwatch_logging_enabled ? 1 : 0
+  count      = var.s3_bucket_logging && var.cloudwatch_logging_enabled ? 1 : 0
   role       = aws_iam_role.s3_cloudtrail_cloudwatch_role[0].name
   policy_arn = aws_iam_policy.s3_cloudtrail_cloudwatch_policy[0].arn
 }
 
 module "log_bucket" {
-  count                                 = var.logging ? 1 : 0
+  count                                 = var.s3_bucket_logging ? 1 : 0
   source                                = "terraform-aws-modules/s3-bucket/aws"
   version                               = "3.10.0"
-  bucket                                = format("%s-%s-log-bucket", var.bucket_name, data.aws_caller_identity.current.account_id)
-  force_destroy                         = true
-  attach_elb_log_delivery_policy        = true
-  attach_lb_log_delivery_policy         = true
-  attach_deny_insecure_transport_policy = true
+  bucket                                = format("%s-%s-log-bucket", var.s3_bucket_name, var.aws_account_id)
+  force_destroy                      = var.s3_bucket_force_destroy
+  attach_elb_log_delivery_policy        = var.s3_bucket_attach_elb_log_delivery_policy
+  attach_lb_log_delivery_policy         = var.s3_bucket_attach_lb_log_delivery_policy
+  attach_deny_insecure_transport_policy = var.s3_bucket_attach_deny_insecure_transport_policy
   versioning = {
-    enabled = var.versioning_enabled
+    enabled = var.s3_bucket_versioning_enabled
   }
   # S3 bucket-level Public Access Block configuration
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  block_public_acls       = var.s3_bucket_block_public_acls
+  block_public_policy     = var.s3_bucket_block_public_policy
+  ignore_public_acls      = var.s3_bucket_ignore_public_acls
+  restrict_public_buckets = var.s3_bucket_restrict_public_buckets
   lifecycle_rule = [
     {
       id      = "log"
-      enabled = var.log_bucket_lifecycle_enabled
+      enabled = var.s3_log_bucket_lifecycle_enabled
 
       transition = [
         {
@@ -139,7 +139,7 @@ module "log_bucket" {
       ]
     }
   ]
-  attach_policy = true
+  attach_policy = var.s3_bucket_attach_policy
   policy        = <<POLICY
 {
     "Version": "2012-10-17",
@@ -149,14 +149,14 @@ module "log_bucket" {
             "Effect": "Allow",
             "Principal": {"Service":"cloudtrail.amazonaws.com"},
             "Action": "s3:GetBucketAcl",
-            "Resource": "arn:aws:s3:::${var.bucket_name}-${data.aws_caller_identity.current.account_id}-log-bucket"
+            "Resource": "arn:aws:s3:::${var.s3_bucket_name}-${var.aws_account_id}-log-bucket"
         },
         {
             "Sid": "AWSCloudTrailWrite20150319",
             "Effect": "Allow",
             "Principal": {"Service":"cloudtrail.amazonaws.com"},
             "Action": "s3:PutObject",
-            "Resource": "arn:aws:s3:::${var.bucket_name}-${data.aws_caller_identity.current.account_id}-log-bucket/log/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
+            "Resource": "arn:aws:s3:::${var.s3_bucket_name}-${var.aws_account_id}-log-bucket/log/AWSLogs/${var.aws_account_id}/*",
             "Condition": {
                 "StringEquals": {
                     "s3:x-amz-acl": "bucket-owner-full-control"
@@ -169,21 +169,21 @@ POLICY
 }
 
 module "kms_key" {
-  count      = var.logging ? 1 : 0
+  count      = var.s3_bucket_logging ? 1 : 0
   depends_on = [data.aws_iam_policy_document.default]
   source     = "clouddrove/kms/aws"
   version    = "0.15.0"
 
-  name                    = format("%s-%s-kms-03", var.bucket_name, data.aws_caller_identity.current.account_id)
+  name                    = format("%s-%s-kms-03", var.s3_bucket_name, var.aws_account_id)
   enabled                 = true
   description             = "KMS key for cloudtrail"
-  deletion_window_in_days = 15
+  deletion_window_in_days = var.kms_deletion_window_in_days
   policy                  = data.aws_iam_policy_document.default[0].json
-  enable_key_rotation     = true
+  enable_key_rotation     = var.enable_key_rotation
 }
 
 data "aws_iam_policy_document" "default" {
-  count   = var.logging ? 1 : 0
+  count   = var.s3_bucket_logging ? 1 : 0
   version = "2012-10-17"
   statement {
     sid    = "Enable IAM User Permissions"
@@ -207,7 +207,7 @@ data "aws_iam_policy_document" "default" {
     condition {
       test     = "StringLike"
       variable = "kms:EncryptionContext:aws:cloudtrail:arn"
-      values   = ["arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"]
+      values   = ["arn:aws:cloudtrail:*:${var.aws_account_id}:trail/*"]
     }
   }
 
@@ -238,12 +238,12 @@ data "aws_iam_policy_document" "default" {
       test     = "StringEquals"
       variable = "kms:CallerAccount"
       values = [
-      "${data.aws_caller_identity.current.account_id}"]
+      "${var.aws_account_id}"]
     }
     condition {
       test     = "StringLike"
       variable = "kms:EncryptionContext:aws:cloudtrail:arn"
-      values   = ["arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"]
+      values   = ["arn:aws:cloudtrail:*:${var.aws_account_id}:trail/*"]
     }
   }
 
