@@ -1,6 +1,6 @@
 locals {
   aws_region                              = "us-east-1"
-  aws_account_id                          = "767398031518"
+  aws_account_id                          = ""    # AWS Account ID
   environment                             = "prod"
   s3_bucket_logging                       = "true"
   s3_bucket_name                          = "production-tfstate-bucket"
@@ -20,7 +20,7 @@ locals {
 }
 
 module "backend" {
-  source                           = "../../"
+  source                           = "squareops/tfstate/aws"
   s3_bucket_logging                = local.s3_bucket_logging
   s3_bucket_name                   = local.s3_bucket_name ############unique global s3 bucket name
   environment                      = local.environment
