@@ -118,19 +118,19 @@ variable "dynamodb_write_capacity" {
 }
 
 variable "name" {
-  description = "Name of the Attribute."
+  description = "The name of the attribute in the DynamoDB table."
   default     = "LockID"
   type        = string
 }
 
 variable "type" {
-  description = "Attribute type. Valid values are S (string), N (number), B (binary)."
+  description = "The data type of the attribute in the DynamoDB table.Valid values are S (string), N (number), B (binary)."
   default     = "S"
   type        = string
 }
 
 variable "cloudwatch_logging_enabled" {
-  description = "Enable or disable CloudWatch log group logging."
+  description = "CloudWatch log group logging should be enabled or disabled."
   default     = true
   type        = bool
 }
@@ -154,12 +154,12 @@ variable "s3_ia_retention_in_days" {
 }
 
 variable "s3_log_bucket_lifecycle_enabled" {
-  description = "Enable or disable the S3 bucket's lifecycle rule for log data."
+  description = "The S3 bucket's lifecycle rule for log data to be enabled or not."
   default     = true
   type        = bool
 }
 
-variable "cloudtrail_enable_logging" {
+variable "cloudtrail_logging_enabled" {
   description = "Enables logging for the trail."
   default     = true
   type        = bool
@@ -195,10 +195,41 @@ variable "s3_bucket_attach_lb_log_delivery_policy" {
   type        = bool
 }
 
-variable "enable_key_rotation" {
+variable "key_rotation_enabled" {
   description = "Whether automatic key rotation should be enabled for the AWS Key Management Service (KMS) key being created."
   default     = true
   type        = bool
 }
+
+variable "read_write_type" {
+  description = "Categories of Events for Logging.Valid values are ReadOnly, WriteOnly, All. Default value is All."
+  default     = "All"
+  type        = string
+}
+
+variable "cloudwatch_log_group_skip_destroy" {
+  description = "Set to true if do not want the log group to be deleted at destroy time."
+  default     = true
+  type        = bool
+}
+
+variable "description" {
+  description = "Explaination of resource created under aws_kms_key."
+  default     = "This key is used to encrypt bucket objects."
+  type        = string
+}
+
+variable "cloudtrail_data_resources_enable" {
+  description = "Set to true to enable data resources in resource aws_cloudtrail."
+  default     = true
+  type        = bool
+}
+
+variable "cloudtrail_s3_key_prefix" {
+  description = "Specify a prefix for the keys of the log files that CloudTrail will create in the designated S3 bucket."
+  default     = "logs"
+  type        = string
+}
+
 
 

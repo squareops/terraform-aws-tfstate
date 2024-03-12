@@ -1,12 +1,12 @@
 resource "aws_kms_key" "mykey" {
-  description             = "This key is used to encrypt bucket objects"
+  description             = var.description
   deletion_window_in_days = var.kms_deletion_window_in_days
   tags = merge(
     { "Name" = format("%s-%s", var.environment, var.s3_bucket_name) },
     var.additional_tags,
   )
 }
-resource "aws_iam_role" "this" {
+resource "aws_iam_role" "iamrole" {
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -32,7 +32,7 @@ data "aws_iam_policy_document" "bucket_policy" {
   statement {
     principals {
       type        = "AWS"
-      identifiers = [aws_iam_role.this.arn]
+      identifiers = [aws_iam_role.iamrole.arn]
     }
 
     actions = [
@@ -47,7 +47,7 @@ data "aws_iam_policy_document" "bucket_policy" {
 
 module "s3_bucket" {
   source                                = "terraform-aws-modules/s3-bucket/aws"
-  version                               = "3.10.0"
+  version                               = "4.1.0"
   bucket                                = format("%s-%s", var.s3_bucket_name, var.aws_account_id)
   force_destroy                         = var.s3_bucket_force_destroy
   attach_policy                         = var.s3_bucket_attach_policy

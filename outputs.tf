@@ -1,4 +1,4 @@
-output "state_bucket_name" {
+output "s3_state_bucket_name" {
   description = "Specify the region in which an S3 bucket will be created by the module."
   value       = module.s3_bucket.s3_bucket_id
 }
@@ -8,12 +8,12 @@ output "dynamodb_table_name" {
   value       = aws_dynamodb_table.dynamodb_table.id
 }
 
-output "log_bucket_name" {
+output "s3_log_bucket_name" {
   description = "Name of the S3 bucket that will be used to store logs."
   value       = var.s3_bucket_logging ? module.log_bucket[0].s3_bucket_id : null
 }
 
-output "region" {
+output "aws_region" {
   description = "Name of the region in which Cloudtrail is created"
   value       = var.s3_bucket_logging ? aws_cloudtrail.s3_cloudtrail[0].home_region : null
 }

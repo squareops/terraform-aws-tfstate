@@ -3,24 +3,31 @@ resource "aws_cloudtrail" "s3_cloudtrail" {
   depends_on                    = [aws_iam_role_policy_attachment.s3_cloudtrail_policy_attachment]
   name                          = format("%s-%s-S3-Trail", var.s3_bucket_name, var.aws_account_id)
   s3_bucket_name                = module.log_bucket[0].s3_bucket_id
-  s3_key_prefix                 = "log"
+  s3_key_prefix                 = var.cloudtrail_s3_key_prefix
   include_global_service_events = var.s3_bucket_include_global_service_events
-  enable_logging                = var.cloudtrail_enable_logging
+  enable_logging                = var.cloudtrail_logging_enabled
   enable_log_file_validation    = var.cloudtrail_enable_log_file_validation
   cloud_watch_logs_role_arn     = var.cloudwatch_logging_enabled ? aws_iam_role.s3_cloudtrail_cloudwatch_role[0].arn : null
   cloud_watch_logs_group_arn    = var.cloudwatch_logging_enabled ? "${aws_cloudwatch_log_group.s3_cloudwatch[0].arn}:*" : null
-  kms_key_id                    = module.kms_key[0].key_arn
+  kms_key_id                    = aws_kms_key.cloudtrail_key[0].arn
   event_selector {
-    read_write_type           = "All"
+    read_write_type           = var.read_write_type
     include_management_events = var.s3_bucket_include_management_events
-    data_resource {
-      type   = "AWS::S3::Object"
-      values = ["arn:aws:s3"]
-    }
-    data_resource {
-      type   = "AWS::Lambda::Function"
-      values = ["arn:aws:lambda"]
-    }
+     dynamic "data_resource" {
+        for_each = var.cloudtrail_data_resources_enable ? [1] : []
+        content {
+          type   = "AWS::S3::Object"
+          values = ["arn:aws:s3"]
+        }
+      }
+
+      dynamic "data_resource" {
+        for_each = var.cloudtrail_data_resources_enable ? [1] : []
+        content {
+          type   = "AWS::Lambda::Function"
+          values = ["arn:aws:lambda"]
+        }
+      }
   }
   tags = merge(
     { "Name" = format("%s-%s-S3", var.s3_bucket_name, var.aws_account_id) },
@@ -31,8 +38,9 @@ resource "aws_cloudtrail" "s3_cloudtrail" {
 resource "aws_cloudwatch_log_group" "s3_cloudwatch" {
   count             = var.s3_bucket_logging && var.cloudwatch_logging_enabled ? 1 : 0
   name              = format("%s-%s-S3", var.s3_bucket_name, var.aws_account_id)
-  kms_key_id        = module.kms_key[0].key_arn
+  kms_key_id        = aws_kms_key.cloudtrail_key[0].arn
   retention_in_days = var.cloudwatch_log_retention_in_days
+  skip_destroy      = var.cloudwatch_log_group_skip_destroy
   tags = merge(
     { "Name" = format("%s-%s-S3", var.s3_bucket_name, var.aws_account_id) },
     var.additional_tags,
@@ -109,9 +117,9 @@ resource "aws_iam_role_policy_attachment" "s3_cloudtrail_policy_attachment" {
 module "log_bucket" {
   count                                 = var.s3_bucket_logging ? 1 : 0
   source                                = "terraform-aws-modules/s3-bucket/aws"
-  version                               = "3.10.0"
+  version                               = "4.1.0"
   bucket                                = format("%s-%s-log-bucket", var.s3_bucket_name, var.aws_account_id)
-  force_destroy                      = var.s3_bucket_force_destroy
+  force_destroy                         = var.s3_bucket_force_destroy
   attach_elb_log_delivery_policy        = var.s3_bucket_attach_elb_log_delivery_policy
   attach_lb_log_delivery_policy         = var.s3_bucket_attach_lb_log_delivery_policy
   attach_deny_insecure_transport_policy = var.s3_bucket_attach_deny_insecure_transport_policy
@@ -140,26 +148,32 @@ module "log_bucket" {
     }
   ]
   attach_policy = var.s3_bucket_attach_policy
-  policy        = <<POLICY
+    policy        = <<POLICY
 {
     "Version": "2012-10-17",
     "Statement": [
         {
             "Sid": "AWSCloudTrailAclCheck20150319",
             "Effect": "Allow",
-            "Principal": {"Service":"cloudtrail.amazonaws.com"},
+            "Principal": {"Service": "cloudtrail.amazonaws.com"},
             "Action": "s3:GetBucketAcl",
-            "Resource": "arn:aws:s3:::${var.s3_bucket_name}-${var.aws_account_id}-log-bucket"
+            "Resource": "arn:aws:s3:::${var.s3_bucket_name}-${var.aws_account_id}-log-bucket",
+            "Condition": {
+                "StringEquals": {
+                    "aws:SourceArn": "arn:aws:cloudtrail:${var.aws_region}:${var.aws_account_id}:trail/${var.s3_bucket_name}-${var.aws_account_id}-S3-Trail"
+                }
+            }
         },
         {
             "Sid": "AWSCloudTrailWrite20150319",
             "Effect": "Allow",
-            "Principal": {"Service":"cloudtrail.amazonaws.com"},
+            "Principal": {"Service": "cloudtrail.amazonaws.com"},
             "Action": "s3:PutObject",
-            "Resource": "arn:aws:s3:::${var.s3_bucket_name}-${var.aws_account_id}-log-bucket/log/AWSLogs/${var.aws_account_id}/*",
+            "Resource": "arn:aws:s3:::${var.s3_bucket_name}-${var.aws_account_id}-log-bucket/*",
             "Condition": {
                 "StringEquals": {
-                    "s3:x-amz-acl": "bucket-owner-full-control"
+                    "s3:x-amz-acl": "bucket-owner-full-control",
+                    "aws:SourceArn": "arn:aws:cloudtrail:${var.aws_region}:${var.aws_account_id}:trail/${var.s3_bucket_name}-${var.aws_account_id}-S3-Trail"
                 }
             }
         }
@@ -168,18 +182,18 @@ module "log_bucket" {
 POLICY
 }
 
-module "kms_key" {
+resource "aws_kms_key" "cloudtrail_key" {
   count      = var.s3_bucket_logging ? 1 : 0
-  depends_on = [data.aws_iam_policy_document.default]
-  source     = "clouddrove/kms/aws"
-  version    = "0.15.0"
-
-  name                    = format("%s-%s-kms-03", var.s3_bucket_name, var.aws_account_id)
-  enabled                 = true
   description             = "KMS key for cloudtrail"
-  deletion_window_in_days = var.kms_deletion_window_in_days
   policy                  = data.aws_iam_policy_document.default[0].json
-  enable_key_rotation     = var.enable_key_rotation
+  deletion_window_in_days = var.kms_deletion_window_in_days
+  enable_key_rotation     = var.key_rotation_enabled
+}
+
+resource "aws_kms_alias" "custom_alias" {
+  count = var.s3_bucket_logging ? 1 : 0
+  name  = "alias/${var.s3_bucket_name}-kms-03"
+  target_key_id = aws_kms_key.cloudtrail_key[0].id
 }
 
 data "aws_iam_policy_document" "default" {
