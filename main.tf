@@ -1,12 +1,12 @@
-resource "aws_kms_key" "mykey" {
-  description             = var.description
+resource "aws_kms_key" "kms_key" {
+  description             = var.kms_key_description
   deletion_window_in_days = var.kms_deletion_window_in_days
   tags = merge(
     { "Name" = format("%s-%s", var.environment, var.s3_bucket_name) },
     var.additional_tags,
   )
 }
-resource "aws_iam_role" "iamrole" {
+resource "aws_iam_role" "iam_role" {
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -32,7 +32,7 @@ data "aws_iam_policy_document" "bucket_policy" {
   statement {
     principals {
       type        = "AWS"
-      identifiers = [aws_iam_role.iamrole.arn]
+      identifiers = [aws_iam_role.iam_role.arn]
     }
 
     actions = [
@@ -60,7 +60,7 @@ module "s3_bucket" {
   server_side_encryption_configuration = {
     rule = {
       apply_server_side_encryption_by_default = {
-        kms_master_key_id = aws_kms_key.mykey.arn
+        kms_master_key_id = aws_kms_key.kms_key.arn
         sse_algorithm     = "aws:kms"
       }
     }
@@ -89,8 +89,8 @@ resource "aws_dynamodb_table" "dynamodb_table" {
   write_capacity = var.dynamodb_write_capacity
 
   attribute {
-    name = var.name
-    type = var.type
+    name = var.dynamodb_table_attribute_name
+    type = var.dynamodb_table_attribute_type
   }
 
   tags = merge(

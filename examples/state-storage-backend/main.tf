@@ -1,9 +1,9 @@
 locals {
-  aws_region                              = ""
-  aws_account_id                          = "" # AWS Account ID
+  aws_region                              = "us-east-1"
+  aws_account_id                          = "767398031518" # AWS Account ID
   environment                             = "prod"
   s3_bucket_logging                       = "true"
-  s3_bucket_name                          = "prod-tfstate-bucket-example"
+  s3_bucket_name                          = "prod-tfstate"
   s3_bucket_force_destroy                 = true
   s3_bucket_versioning_enabled            = true
   cloudwatch_logging_enabled              = true
@@ -16,11 +16,27 @@ locals {
     Expires    = "Never"
     Department = "Engineering"
   }
-
+  # Define the lifecycle rules
+  s3_bucket_lifecycle_rules = [
+    {
+      id      = "log"
+      enabled = true
+      transitions = [
+        {
+          days          = 90
+          storage_class = "ONEZONE_IA"
+        },
+        {
+          days          = 180
+          storage_class = "GLACIER"
+        }
+      ]
+    }
+  ]
 }
 
 module "backend" {
-  source                            = "squareops/tfstate/aws"
+  source                            = "../.."
   aws_region                        = local.aws_region
   aws_account_id                    = local.aws_account_id
   s3_bucket_logging                 = local.s3_bucket_logging
@@ -34,7 +50,8 @@ module "backend" {
   s3_log_bucket_lifecycle_enabled   = local.cloudwatch_log_bucket_lifecycle_enabled
   s3_ia_retention_in_days           = "90"
   s3_galcier_retention_in_days      = "180"
-  cloudtrail_data_resources_enable  = local.cloudtrail_data_resources_enable
-  cloudtrail_s3_key_prefix          = local.cloudtrail_s3_key_prefix
-  additional_tags                   = local.additional_tags
+  # s3_bucket_lifecycle_rules         = local.s3_bucket_lifecycle_rules
+  cloudtrail_data_resources_enable = local.cloudtrail_data_resources_enable
+  cloudtrail_s3_key_prefix         = local.cloudtrail_s3_key_prefix
+  additional_tags                  = local.additional_tags
 }

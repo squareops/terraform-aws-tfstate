@@ -2,15 +2,15 @@ variable "additional_tags" {
   description = "Additional tags to be applied to AWS resources"
   type        = map(string)
   default     = {
-    Owner      = "organization_name"
-    Expires    = "Never"
-    Department = "Engineering"
+    Owner      = ""
+    Expires    = ""
+    Department = ""
   }
 }
 
 variable "aws_region" {
   description = "Name of the AWS region where S3 bucket is to be created."
-  default     = "us-east-1"
+  default     = ""
   type        = string
 }
 
@@ -117,13 +117,13 @@ variable "dynamodb_write_capacity" {
   type        = number
 }
 
-variable "name" {
+variable "dynamodb_table_attribute_name" {
   description = "The name of the attribute in the DynamoDB table."
   default     = "LockID"
   type        = string
 }
 
-variable "type" {
+variable "dynamodb_table_attribute_type" {
   description = "The data type of the attribute in the DynamoDB table.Valid values are S (string), N (number), B (binary)."
   default     = "S"
   type        = string
@@ -160,7 +160,7 @@ variable "s3_log_bucket_lifecycle_enabled" {
 }
 
 variable "cloudtrail_logging_enabled" {
-  description = "Enables logging for the trail."
+  description = "Enables logging for the Cloud trail."
   default     = true
   type        = bool
 }
@@ -195,13 +195,13 @@ variable "s3_bucket_attach_lb_log_delivery_policy" {
   type        = bool
 }
 
-variable "key_rotation_enabled" {
+variable "kms_key_rotation_enabled" {
   description = "Whether automatic key rotation should be enabled for the AWS Key Management Service (KMS) key being created."
   default     = true
   type        = bool
 }
 
-variable "read_write_type" {
+variable "logging_read_write_type" {
   description = "Categories of Events for Logging.Valid values are ReadOnly, WriteOnly, All. Default value is All."
   default     = "All"
   type        = string
@@ -213,7 +213,7 @@ variable "cloudwatch_log_group_skip_destroy" {
   type        = bool
 }
 
-variable "description" {
+variable "kms_key_description" {
   description = "Explaination of resource created under aws_kms_key."
   default     = "This key is used to encrypt bucket objects."
   type        = string
@@ -231,5 +231,15 @@ variable "cloudtrail_s3_key_prefix" {
   type        = string
 }
 
-
-
+# variable "s3_bucket_lifecycle_rules" {
+#   description = "List of lifecycle rules for the S3 bucket"
+#   type        = list(object({
+#     id          = string
+#     enabled     = bool
+#     transitions = list(object({
+#       days          = number
+#       storage_class = string
+#     }))
+#   }))
+#   default     = []
+# }
