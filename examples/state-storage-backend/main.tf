@@ -57,8 +57,6 @@ module "backend" {
   cloudwatch_log_group_skip_destroy = local.cloudwatch_log_group_skip_destroy
   cloudwatch_log_retention_in_days  = "90"
   s3_log_bucket_lifecycle_enabled   = local.cloudwatch_log_bucket_lifecycle_enabled
-  # s3_ia_retention_in_days           = "90"
-  # s3_galcier_retention_in_days      = "180"
   s3_bucket_lifecycle_rules         = local.s3_bucket_lifecycle_rules
   cloudtrail_data_resources_enable = local.cloudtrail_data_resources_enable
   cloudtrail_s3_key_prefix         = local.cloudtrail_s3_key_prefix
