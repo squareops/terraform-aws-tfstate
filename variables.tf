@@ -231,15 +231,49 @@ variable "cloudtrail_s3_key_prefix" {
   type        = string
 }
 
-# variable "s3_bucket_lifecycle_rules" {
-#   description = "List of lifecycle rules for the S3 bucket"
-#   type        = list(object({
-#     id          = string
-#     enabled     = bool
-#     transitions = list(object({
-#       days          = number
-#       storage_class = string
-#     }))
-#   }))
-#   default     = []
-# }
+variable "s3_bucket_enable_object_lock" {
+  description = "Whether to enable object lock"
+  type        = bool
+  default     = true
+}
+
+variable "s3_bucket_object_lock_mode" {
+  description = "Default Object Lock retention mode you want to apply to new objects placed in the specified bucket. Valid values: COMPLIANCE, GOVERNANCE."
+  type        = string
+  default     = "GOVERNANCE"
+}
+
+variable "s3_bucket_object_lock_days" {
+  description = "Optional, Required if years is not specified) Number of days that you want to specify for the default retention period."
+  type        = number
+  default     = 30
+}
+
+variable "s3_bucket_lifecycle_rules" {
+  description = "List of S3 bucket lifecycle rules"
+  type        = map(object({
+    id                            = string
+    prefix                        = string
+    expiration_days               = number
+    transition_standard_ia_days   = number
+    transition_glacier_days       = number
+    filter_prefix                 = string
+    filter_tags                   = map(string)
+    status                        = string
+  }))
+  default = {
+    log_rule = {
+      id                            = "log"
+      prefix                        = "log/"
+      expiration_days               = 90
+      transition_standard_ia_days   = 30
+      transition_glacier_days       = 60
+      filter_prefix                 = "log/"
+      filter_tags                   = {
+        rule      = "log"
+        autoclean = "true"
+      }
+      status                        = "Enabled"
+    }
+  }
+}

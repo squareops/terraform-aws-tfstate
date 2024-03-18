@@ -112,6 +112,46 @@ resource "aws_iam_role_policy_attachment" "s3_cloudtrail_policy_attachment" {
   role       = aws_iam_role.s3_cloudtrail_cloudwatch_role[0].name
   policy_arn = aws_iam_policy.s3_cloudtrail_cloudwatch_policy[0].arn
 }
+  
+resource "aws_s3_bucket_object_lock_configuration" "object_lock" {
+  count  = var.s3_bucket_logging && var.s3_bucket_enable_object_lock ? 1 : 0
+  bucket = var.s3_bucket_logging ? module.log_bucket[0].s3_bucket_id : null
+    rule {
+      default_retention {
+        mode  = var.s3_bucket_object_lock_mode
+        days  = var.s3_bucket_object_lock_days
+      }
+    }
+  }
+
+resource "aws_s3_bucket_lifecycle_configuration" "s3_bucket_lifecycle_rules" {
+  bucket = var.s3_bucket_logging ? module.log_bucket[0].s3_bucket_id : null
+  for_each = var.s3_bucket_lifecycle_rules
+
+  rule {
+    id = each.value.id
+
+    expiration {
+      days = each.value.expiration_days
+    }
+
+    filter {
+      prefix = each.value.filter_prefix
+    }
+
+    status = each.value.status
+
+    transition {
+      days          = each.value.transition_standard_ia_days
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = each.value.transition_glacier_days
+      storage_class = "GLACIER"
+    }
+  }
+}
 
 module "log_bucket" {
   count                                 = var.s3_bucket_logging ? 1 : 0
@@ -130,22 +170,7 @@ module "log_bucket" {
   block_public_policy     = var.s3_bucket_block_public_policy
   ignore_public_acls      = var.s3_bucket_ignore_public_acls
   restrict_public_buckets = var.s3_bucket_restrict_public_buckets
-  lifecycle_rule = [
-    {
-      id      = "log"
-      enabled = var.s3_log_bucket_lifecycle_enabled
 
-      transition = [
-        {
-          days          = var.s3_ia_retention_in_days
-          storage_class = "ONEZONE_IA"
-          }, {
-          days          = var.s3_galcier_retention_in_days
-          storage_class = "GLACIER"
-        }
-      ]
-    }
-  ]
   attach_policy = var.s3_bucket_attach_policy
     policy        = <<POLICY
 {
@@ -180,6 +205,7 @@ module "log_bucket" {
 }
 POLICY
 }
+
 
 resource "aws_kms_key" "cloudtrail_key" {
   count                 = var.s3_bucket_logging ? 1 : 0
