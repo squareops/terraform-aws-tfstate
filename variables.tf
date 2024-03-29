@@ -1,11 +1,7 @@
 variable "additional_tags" {
   description = "Additional tags to be applied to AWS resources"
   type        = map(string)
-  default     = {
-    Owner      = ""
-    Expires    = ""
-    Department = ""
-  }
+  default     = {}
 }
 
 variable "aws_region" {
@@ -141,18 +137,6 @@ variable "cloudwatch_log_retention_in_days" {
   type        = number
 }
 
-variable "s3_galcier_retention_in_days" {
-  description = "Retention period (in days) for moving S3 log data to Glacier storage."
-  default     = 180
-  type        = number
-}
-
-variable "s3_ia_retention_in_days" {
-  description = "Retention period (in days) for moving S3 log data to Infrequent Access storage."
-  default     = 90
-  type        = number
-}
-
 variable "s3_log_bucket_lifecycle_enabled" {
   description = "The S3 bucket's lifecycle rule for log data to be enabled or not."
   default     = true
@@ -231,49 +215,156 @@ variable "cloudtrail_s3_key_prefix" {
   type        = string
 }
 
-variable "s3_bucket_enable_object_lock" {
+variable "s3_bucket_enable_object_lock_logging" {
   description = "Whether to enable object lock"
   type        = bool
   default     = true
 }
 
-variable "s3_bucket_object_lock_mode" {
+variable "s3_bucket_object_lock_mode_logging" {
   description = "Default Object Lock retention mode you want to apply to new objects placed in the specified bucket. Valid values: COMPLIANCE, GOVERNANCE."
   type        = string
   default     = "GOVERNANCE"
 }
 
-variable "s3_bucket_object_lock_days" {
+variable "s3_bucket_object_lock_days_logging" {
   description = "Optional, Required if years is not specified) Number of days that you want to specify for the default retention period."
   type        = number
-  default     = 30
+  default     = 0
 }
 
-variable "s3_bucket_lifecycle_rules" {
-  description = "List of S3 bucket lifecycle rules"
-  type        = map(object({
-    id                            = string
-    prefix                        = string
-    expiration_days               = number
-    transition_standard_ia_days   = number
-    transition_glacier_days       = number
-    filter_prefix                 = string
-    filter_tags                   = map(string)
-    status                        = string
+variable "s3_bucket_object_lock_years_logging" {
+  description = "Optional, Required if days is not specified) Number of years that you want to specify for the default retention period."
+  type        = number
+  default     = 0
+}
+
+variable "s3_bucket_lifecycle_rules_logging" {
+  type = map(object({
+    id                = string
+    expiration_days   = number
+    filter_prefix     = string
+    status            = string
+    transitions       = list(object({
+      days          = number
+      storage_class = string
+    }))
   }))
   default = {
-    log_rule = {
-      id                            = "log"
-      prefix                        = "log/"
-      expiration_days               = 90
-      transition_standard_ia_days   = 30
-      transition_glacier_days       = 60
-      filter_prefix                 = "log/"
-      filter_tags                   = {
-        rule      = "log"
-        autoclean = "true"
-      }
-      status                        = "Enabled"
+    rule1 = {
+      id                = "rule1"
+      expiration_days   = 30
+      filter_prefix     = "prefix1"
+      status            = "Enabled"
+      transitions = [
+        {
+          days          = 60
+          storage_class = "STANDARD_IA"
+        },
+        {
+          days          = 90
+          storage_class = "GLACIER"
+        }
+      ]
+    }
+    rule2 = {
+      id                = "rule2"
+      expiration_days   = 60
+      filter_prefix     = "prefix2"
+      status            = "Enabled"
+      transitions = [
+        {
+          days          = 90
+          storage_class = "STANDARD_IA"
+        },
+        {
+          days          = 120
+          storage_class = "GLACIER"
+        }
+      ]
+    }
+  }
+}
+
+variable "s3_bucket_enable_object_lock_tfstate" {
+  description = "Whether to enable object lock"
+  type        = bool
+  default     = true
+}
+
+variable "s3_bucket_object_lock_mode_tfstate" {
+  description = "Default Object Lock retention mode you want to apply to new objects placed in the specified bucket. Valid values: COMPLIANCE, GOVERNANCE."
+  type        = string
+  default     = "GOVERNANCE"
+}
+
+variable "s3_bucket_object_lock_days_tfstate" {
+  description = "Optional, Required if years is not specified) Number of days that you want to specify for the default retention period."
+  type        = number
+  default     = null
+}
+
+variable "s3_bucket_object_lock_years_tfstate" {
+  description = "Optional, Required if days is not specified) Number of years that you want to specify for the default retention period."
+  type        = number
+  default     = null
+}
+
+variable "s3_bucket_lifecycle_rules_tfstate_enabled" {
+  description = "Whether to enable lifecyle rules for tfstate S3 bucket."
+  type        = bool
+  default     = true
+}
+
+variable "s3_bucket_lifecycle_logging_enabled" {
+  description = "Whether to enable lifecyle rules for logging S3 bucket."
+  type        = bool
+  default     = true
+}
+
+variable "s3_bucket_lifecycle_rules_tfstate" {
+  type = map(object({
+    id                = string
+    expiration_days   = number
+    filter_prefix     = string
+    status            = string
+    transitions       = list(object({
+      days          = number
+      storage_class = string
+    }))
+  }))
+  default = {
+    rule1 = {
+      id                = "rule1"
+      expiration_days   = 30
+      filter_prefix     = "prefix1"
+      status            = "Enabled"
+      transitions = [
+        {
+          days          = 60
+          storage_class = "STANDARD_IA"
+        },
+        {
+          days          = 90
+          storage_class = "GLACIER"
+        }
+      ]
+    }
+    rule2 = {
+      id                = "rule2"
+      expiration_days   = 60
+      filter_prefix     = "prefix2"
+      status            = "Enabled"
+      transitions = [
+        {
+          days          = 90
+          storage_class = "STANDARD_IA"
+        },
+        {
+          days          = 120
+          storage_class = "GLACIER"
+        }
+      ]
     }
   }
 }

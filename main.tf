@@ -1,11 +1,3 @@
-resource "aws_kms_key" "kms_key" {
-  description             = var.kms_key_description
-  deletion_window_in_days = var.kms_deletion_window_in_days
-  tags = merge(
-    { "Name" = format("%s-%s", var.environment, var.s3_bucket_name) },
-    var.additional_tags,
-  )
-}
 resource "aws_iam_role" "iam_role" {
   assume_role_policy = <<EOF
 {
@@ -45,6 +37,52 @@ data "aws_iam_policy_document" "bucket_policy" {
   }
 }
 
+resource "aws_s3_bucket_object_lock_configuration" "object_lock_tfstate" {
+  count  = var.s3_bucket_enable_object_lock_tfstate ? 1 : 0
+  bucket = module.s3_bucket.s3_bucket_id
+
+  rule {
+    default_retention {
+      mode  = var.s3_bucket_object_lock_mode_tfstate
+      
+      // Use days if provided, otherwise use years converted to days
+      days  = var.s3_bucket_object_lock_days_tfstate > 0 ? var.s3_bucket_object_lock_days_tfstate : null
+      years = var.s3_bucket_object_lock_years_tfstate > 0 ? var.s3_bucket_object_lock_years_tfstate : null
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "s3_bucket_lifecycle_rules_tfstate" {
+  bucket = module.s3_bucket.s3_bucket_id
+   count  = var.s3_bucket_lifecycle_rules_tfstate_enabled ? 1 : 0
+  
+  dynamic "rule" {
+    for_each = var.s3_bucket_lifecycle_rules_tfstate
+
+    content {
+      id = rule.value.id
+
+      expiration {
+        days = rule.value.expiration_days
+      }
+
+      filter {
+        prefix = rule.value.filter_prefix
+      }
+
+      status = rule.value.status
+
+      dynamic "transition" {
+        for_each = rule.value.transitions
+
+        content {
+          days          = transition.value.days
+          storage_class = transition.value.storage_class
+        }
+      }
+    }
+  }
+}
 module "s3_bucket" {
   source                                = "terraform-aws-modules/s3-bucket/aws"
   version                               = "4.1.0"
@@ -84,7 +122,7 @@ module "s3_bucket" {
 
 resource "aws_dynamodb_table" "dynamodb_table" {
   name           = format("%s-%s-%s", var.s3_bucket_name, "lock-dynamodb", var.aws_account_id)
-  hash_key       = "LockID"
+  hash_key       = var.dynamodb_table_attribute_name
   read_capacity  = var.dynamodb_read_capacity
   write_capacity = var.dynamodb_write_capacity
 
@@ -97,4 +135,117 @@ resource "aws_dynamodb_table" "dynamodb_table" {
     { "Name" = format("%s-%s-%s", var.s3_bucket_name, "lock-dynamodb", var.aws_account_id) },
     var.additional_tags,
   )
+}
+
+resource "aws_kms_key" "kms_key" {
+  description             = var.kms_key_description
+  deletion_window_in_days = var.kms_deletion_window_in_days
+  enable_key_rotation     = var.kms_key_rotation_enabled
+  tags = merge(
+    { "Name" = format("%s-%s", var.environment, var.s3_bucket_name) },
+    var.additional_tags,
+  )
+}
+
+resource "aws_kms_alias" "custom_alias" {
+  count         = var.s3_bucket_logging ? 1 : 0
+  name          = "alias/${var.s3_bucket_name}-kms-03"
+  target_key_id = aws_kms_key.kms_key.id
+}
+
+data "aws_iam_policy_document" "default" {
+  count   = var.s3_bucket_logging ? 1 : 0
+  version = "2012-10-17"
+  statement {
+    sid    = "Enable IAM User Permissions"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "Allow CloudTrail to encrypt logs"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+
+    actions   = ["kms:GenerateDataKey*"]
+    resources = ["*"]
+
+    condition {
+      test     = "StringLike"
+      variable = "kms:EncryptionContext:aws:cloudtrail:arn"
+      values   = ["arn:aws:cloudtrail:*:${var.aws_account_id}:trail/*"]
+    }
+  }
+
+  statement {
+    sid    = "Allow CloudTrail to describe key"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+
+    actions   = ["kms:DescribeKey"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "Allow principals in the account to decrypt log files"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "kms:Decrypt",
+      "kms:ReEncryptFrom",
+    ]
+
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "kms:CallerAccount"
+      values   = ["${var.aws_account_id}"]
+    }
+
+    condition {
+      test     = "StringLike"
+      variable = "kms:EncryptionContext:aws:cloudtrail:arn"
+      values   = ["arn:aws:cloudtrail:*:${var.aws_account_id}:trail/*"]
+    }
+  }
+
+  statement {
+    sid    = "Allow alias creation during setup"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions   = ["kms:CreateAlias"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_kms_key_policy" "cloudtrail_key_policy" {
+  count  = var.s3_bucket_logging ? 1 : 0
+  key_id = aws_kms_key.kms_key.key_id
+  policy = data.aws_iam_policy_document.default[0].json
 }

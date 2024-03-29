@@ -11,57 +11,93 @@ locals {
   cloudwatch_log_group_skip_destroy       = false
   cloudtrail_data_resources_enable        = true
   cloudtrail_s3_key_prefix                = "logs"
-   # Object Lock configuration
-  object_lock_configuration = {
-    object_lock_enabled = true
-    rule = {
-      default_retention = {
-        mode = "GOVERNANCE"
-        days = 30
-      }
-    }
-  }
   additional_tags = {
     Owner      = "organization_name"
     Expires    = "Never"
     Department = "Engineering"
   }
-  # Define the lifecycle rules
-  s3_bucket_lifecycle_rules = {
-  log_rule = {
-    id                            = "1"
-    prefix                        = "log/"
-    expiration_days               = 120
-    transition_standard_ia_days   = 40
-    transition_glacier_days       = 80
-    filter_prefix                 = "log/"
-    filter_tags                   = {
-      rule      = "log"
-      autoclean = "true"
+  s3_bucket_lifecycle_rules_tfstate = {
+    rule1 = {
+      id              = "rule1"
+      expiration_days = 120
+      filter_prefix   = "log/"
+      status          = "Enabled"
+      transitions = [
+        {
+          days          = 30
+          storage_class = "ONEZONE_IA"
+        },
+        {
+          days          = 90
+          storage_class = "DEEP_ARCHIVE"
+        }
+      ]
     }
-    status                        = "Enabled"
   }
-}
+  # Define the lifecycle rules
+
+  s3_bucket_lifecycle_rules = {
+    rule1 = {
+      id              = "rule1"
+      expiration_days = 120
+      filter_prefix   = "log/"
+      status          = "Enabled"
+      transitions = [
+        {
+          days          = 30
+          storage_class = "ONEZONE_IA"
+        },
+        {
+          days          = 90
+          storage_class = "DEEP_ARCHIVE"
+        }
+      ]
+    }
+    rule2 = {
+      id              = "rule2"
+      expiration_days = 150
+      filter_prefix   = "archival/"
+      status          = "Enabled"
+      transitions = [
+        {
+          days          = 90
+          storage_class = "STANDARD_IA"
+        },
+        {
+          days          = 120
+          storage_class = "GLACIER"
+        }
+      ]
+    }
+  }
 }
 
 module "backend" {
-  source                            = "../.."
-  aws_region                        = local.aws_region
-  aws_account_id                    = local.aws_account_id
-  s3_bucket_logging                 = local.s3_bucket_logging
-  s3_bucket_name                    = local.s3_bucket_name ############unique global s3 bucket name
-  environment                       = local.environment
-  s3_bucket_force_destroy           = local.s3_bucket_force_destroy
-  s3_bucket_versioning_enabled      = local.s3_bucket_versioning_enabled
-  cloudwatch_logging_enabled        = local.cloudwatch_logging_enabled
-  cloudwatch_log_group_skip_destroy = local.cloudwatch_log_group_skip_destroy
-  cloudwatch_log_retention_in_days  = "90"
-  s3_log_bucket_lifecycle_enabled   = local.cloudwatch_log_bucket_lifecycle_enabled
-  s3_bucket_lifecycle_rules         = local.s3_bucket_lifecycle_rules
-  cloudtrail_data_resources_enable = local.cloudtrail_data_resources_enable
-  cloudtrail_s3_key_prefix         = local.cloudtrail_s3_key_prefix
-  s3_bucket_object_lock_mode       = "GOVERNANCE"
-  s3_bucket_object_lock_days       = "30"
-  s3_bucket_enable_object_lock     = true
-  additional_tags                  = local.additional_tags
+  source                                    = "../.."
+  aws_region                                = local.aws_region
+  aws_account_id                            = local.aws_account_id
+  s3_bucket_logging                         = local.s3_bucket_logging
+  s3_bucket_name                            = local.s3_bucket_name ############unique global s3 bucket name
+  environment                               = local.environment
+  s3_bucket_force_destroy                   = local.s3_bucket_force_destroy
+  s3_bucket_versioning_enabled              = local.s3_bucket_versioning_enabled
+  cloudwatch_logging_enabled                = local.cloudwatch_logging_enabled
+  cloudwatch_log_group_skip_destroy         = local.cloudwatch_log_group_skip_destroy
+  cloudwatch_log_retention_in_days          = "90"
+  cloudtrail_data_resources_enable          = local.cloudtrail_data_resources_enable
+  s3_log_bucket_lifecycle_enabled           = local.cloudwatch_log_bucket_lifecycle_enabled
+  s3_bucket_lifecycle_rules_logging         = local.s3_bucket_lifecycle_rules
+  cloudtrail_s3_key_prefix                  = local.cloudtrail_s3_key_prefix
+  s3_bucket_object_lock_mode_logging        = "GOVERNANCE"
+  s3_bucket_object_lock_days_logging        = "0"
+  s3_bucket_object_lock_years_logging       = "2"
+  s3_bucket_enable_object_lock_logging      = false
+  s3_bucket_lifecycle_logging_enabled       = false
+  s3_bucket_object_lock_mode_tfstate        = "GOVERNANCE"
+  s3_bucket_object_lock_days_tfstate        = "10"
+  s3_bucket_object_lock_years_tfstate       = "0"
+  s3_bucket_enable_object_lock_tfstate      = false
+  s3_bucket_lifecycle_rules_tfstate_enabled = false
+  s3_bucket_lifecycle_rules_tfstate         = local.s3_bucket_lifecycle_rules_tfstate
+  additional_tags                           = local.additional_tags
 }

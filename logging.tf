@@ -9,7 +9,7 @@ resource "aws_cloudtrail" "s3_cloudtrail" {
   enable_log_file_validation    = var.cloudtrail_enable_log_file_validation
   cloud_watch_logs_role_arn     = var.cloudwatch_logging_enabled ? aws_iam_role.s3_cloudtrail_cloudwatch_role[0].arn : null
   cloud_watch_logs_group_arn    = var.cloudwatch_logging_enabled ? "${aws_cloudwatch_log_group.s3_cloudwatch[0].arn}:*" : null
-  kms_key_id                    = aws_kms_key.cloudtrail_key[0].arn
+  kms_key_id        = aws_kms_key.kms_key.arn
   event_selector {
     read_write_type           = var.logging_read_write_type
     include_management_events = var.s3_bucket_include_management_events
@@ -40,7 +40,8 @@ resource "aws_cloudtrail" "s3_cloudtrail" {
 resource "aws_cloudwatch_log_group" "s3_cloudwatch" {
   count             = var.s3_bucket_logging && var.cloudwatch_logging_enabled ? 1 : 0
   name              = format("%s-%s-s3", var.s3_bucket_name, var.aws_account_id)
-  kms_key_id        = aws_kms_key.cloudtrail_key[0].arn
+  kms_key_id        = aws_kms_key.kms_key.arn
+  
   retention_in_days = var.cloudwatch_log_retention_in_days
   skip_destroy      = var.cloudwatch_log_group_skip_destroy
   tags = merge(
@@ -113,42 +114,45 @@ resource "aws_iam_role_policy_attachment" "s3_cloudtrail_policy_attachment" {
   policy_arn = aws_iam_policy.s3_cloudtrail_cloudwatch_policy[0].arn
 }
   
-resource "aws_s3_bucket_object_lock_configuration" "object_lock" {
-  count  = var.s3_bucket_logging && var.s3_bucket_enable_object_lock ? 1 : 0
+resource "aws_s3_bucket_object_lock_configuration" "object_lock_logging" {
+  count  = var.s3_bucket_logging && var.s3_bucket_enable_object_lock_logging ? 1 : 0
   bucket = var.s3_bucket_logging ? module.log_bucket[0].s3_bucket_id : null
     rule {
       default_retention {
-        mode  = var.s3_bucket_object_lock_mode
-        days  = var.s3_bucket_object_lock_days
+        mode  = var.s3_bucket_object_lock_mode_logging
+        days  = var.s3_bucket_object_lock_days_logging > 0 ? var.s3_bucket_object_lock_days_logging : null
+        years = var.s3_bucket_object_lock_years_logging > 0 ? var.s3_bucket_object_lock_years_logging : null
       }
     }
   }
-
-resource "aws_s3_bucket_lifecycle_configuration" "s3_bucket_lifecycle_rules" {
+resource "aws_s3_bucket_lifecycle_configuration" "s3_bucket_lifecycle_rules_logging" {
+  count = var.s3_bucket_lifecycle_logging_enabled ? 1 : 0
   bucket = var.s3_bucket_logging ? module.log_bucket[0].s3_bucket_id : null
-  for_each = var.s3_bucket_lifecycle_rules
+  
+  dynamic "rule" {
+    for_each = var.s3_bucket_lifecycle_rules_logging
 
-  rule {
-    id = each.value.id
+    content {
+      id = rule.value.id
 
-    expiration {
-      days = each.value.expiration_days
-    }
+      expiration {
+        days = rule.value.expiration_days
+      }
 
-    filter {
-      prefix = each.value.filter_prefix
-    }
+      filter {
+        prefix = rule.value.filter_prefix
+      }
 
-    status = each.value.status
+      status = rule.value.status
 
-    transition {
-      days          = each.value.transition_standard_ia_days
-      storage_class = "STANDARD_IA"
-    }
+      dynamic "transition" {
+        for_each = rule.value.transitions
 
-    transition {
-      days          = each.value.transition_glacier_days
-      storage_class = "GLACIER"
+        content {
+          days          = transition.value.days
+          storage_class = transition.value.storage_class
+        }
+      }
     }
   }
 }
@@ -204,110 +208,4 @@ module "log_bucket" {
     ]
 }
 POLICY
-}
-
-
-resource "aws_kms_key" "cloudtrail_key" {
-  count                 = var.s3_bucket_logging ? 1 : 0
-  description          = "KMS key for cloudtrail"
-  policy               = data.aws_iam_policy_document.default[0].json
-  deletion_window_in_days = var.kms_deletion_window_in_days
-  enable_key_rotation   = var.kms_key_rotation_enabled
-}
-
-resource "aws_kms_alias" "custom_alias" {
-  count         = var.s3_bucket_logging ? 1 : 0
-  name          = "alias/${var.s3_bucket_name}-kms-03"
-  target_key_id = aws_kms_key.cloudtrail_key[0].id
-}
-
-data "aws_iam_policy_document" "default" {
-  count   = var.s3_bucket_logging ? 1 : 0
-  version = "2012-10-17"
-  statement {
-    sid    = "Enable IAM User Permissions"
-    effect = "Allow"
-
-    principals {
-      type        = "AWS"
-      identifiers = ["*"]
-    }
-
-    actions   = ["kms:*"]
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "Allow CloudTrail to encrypt logs"
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["cloudtrail.amazonaws.com"]
-    }
-
-    actions   = ["kms:GenerateDataKey*"]
-    resources = ["*"]
-
-    condition {
-      test     = "StringLike"
-      variable = "kms:EncryptionContext:aws:cloudtrail:arn"
-      values   = ["arn:aws:cloudtrail:*:${var.aws_account_id}:trail/*"]
-    }
-  }
-
-  statement {
-    sid    = "Allow CloudTrail to describe key"
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["cloudtrail.amazonaws.com"]
-    }
-
-    actions   = ["kms:DescribeKey"]
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "Allow principals in the account to decrypt log files"
-    effect = "Allow"
-
-    principals {
-      type        = "AWS"
-      identifiers = ["*"]
-    }
-
-    actions = [
-      "kms:Decrypt",
-      "kms:ReEncryptFrom",
-    ]
-
-    resources = ["*"]
-
-    condition {
-      test     = "StringEquals"
-      variable = "kms:CallerAccount"
-      values   = ["${var.aws_account_id}"]
-    }
-
-    condition {
-      test     = "StringLike"
-      variable = "kms:EncryptionContext:aws:cloudtrail:arn"
-      values   = ["arn:aws:cloudtrail:*:${var.aws_account_id}:trail/*"]
-    }
-  }
-
-  statement {
-    sid    = "Allow alias creation during setup"
-    effect = "Allow"
-
-    principals {
-      type        = "AWS"
-      identifiers = ["*"]
-    }
-
-    actions   = ["kms:CreateAlias"]
-    resources = ["*"]
-  }
 }

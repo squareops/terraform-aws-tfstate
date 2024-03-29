@@ -11,17 +11,32 @@ Terraform module to create Remote State Storage resources for workload deploymen
 
 ```hcl
 module "backend" {
-  source                       = "squareops/tfstate/aws"
-  logging                      = true
-  bucket_name                  = "production-tfstate-bucket" #unique global s3 bucket name
-  environment                  = "prod"
-  force_destroy                = true
-  versioning_enabled           = true
-  cloudwatch_logging_enabled   = true
-  log_retention_in_days        = 90
-  log_bucket_lifecycle_enabled = true
-  s3_ia_retention_in_days      = 90
-  s3_galcier_retention_in_days = 180
+  source                                    = "squareops/tfstate/aws"
+  aws_region                                = "us-east-1"
+  aws_account_id                            = "123456789" #AWS Account ID.
+  s3_bucket_logging                         = true
+  s3_bucket_name                            = "production-tfstate-bucket" #unique global s3 bucket name
+  environment                               = prod
+  s3_bucket_force_destroy                   = true
+  s3_bucket_versioning_enabled              = true
+  cloudwatch_logging_enabled                = true
+  cloudwatch_log_group_skip_destroy         = false
+  cloudwatch_log_retention_in_days          = "90"
+  cloudtrail_data_resources_enable          = true
+  s3_log_bucket_lifecycle_enabled           = true
+  s3_bucket_lifecycle_rules_logging         = true
+  cloudtrail_s3_key_prefix                  = "log/"
+  s3_bucket_object_lock_mode_logging        = "GOVERNANCE"
+  s3_bucket_object_lock_days_logging        = "0"
+  s3_bucket_object_lock_years_logging       = "2"
+  s3_bucket_enable_object_lock_logging      = true
+  s3_bucket_lifecycle_logging_enabled       = true
+  s3_bucket_object_lock_mode_tfstate        = "GOVERNANCE"
+  s3_bucket_object_lock_days_tfstate        = "10"
+  s3_bucket_object_lock_years_tfstate       = "0"
+  s3_bucket_enable_object_lock_tfstate      = true
+  s3_bucket_lifecycle_rules_tfstate_enabled = true
+  s3_bucket_lifecycle_rules_tfstate         = true
 }
 
 ```
@@ -81,17 +96,19 @@ In this module, we have implemented the following CIS Compliance checks for S3:
 | [aws_iam_role.s3_cloudtrail_cloudwatch_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.s3_cloudtrail_policy_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_kms_key.mykey](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
-| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_kms_key.kms_key](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
 | [aws_iam_policy_document.bucket_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.cloudtrail_assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
-| [aws_region.region](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
+| [aws_s3_bucket_object_lock_configuration.object_lock] (https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_object_lock_configuration) | resource |
+| [aws_s3_bucket_lifecycle_configuration.s3_bucket_lifecycle_rules_logging] (https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_lifecycle_configuration) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+<a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | Name of the AWS region where S3 bucket is to be created. | `string` | `""` | no |
+ <a name="input_aws_account_id"></a> [aws\_account\_id] (#input\_aws\_account\_id) | Account ID of the AWS Account. | `string` | `""` | no |
 | <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | Name of the S3 bucket to be created. | `string` | `""` | no |
 | <a name="input_cloudwatch_logging_enabled"></a> [cloudwatch\_logging\_enabled](#input\_cloudwatch\_logging\_enabled) | Enable or disable CloudWatch log group logging. | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Specify the type of environment(dev, demo, prod) in which the S3 bucket will be created. | `string` | `""` | no |
@@ -102,6 +119,18 @@ In this module, we have implemented the following CIS Compliance checks for S3:
 | <a name="input_s3_galcier_retention_in_days"></a> [s3\_galcier\_retention\_in\_days](#input\_s3\_galcier\_retention\_in\_days) | Retention period (in days) for moving S3 log data to Glacier storage. | `number` | `180` | no |
 | <a name="input_s3_ia_retention_in_days"></a> [s3\_ia\_retention\_in\_days](#input\_s3\_ia\_retention\_in\_days) | Retention period (in days) for moving S3 log data to Infrequent Access storage. | `number` | `90` | no |
 | <a name="input_versioning_enabled"></a> [versioning\_enabled](#input\_versioning\_enabled) | Whether or not to enable versioning for the S3 bucket, which allows multiple versions of an object to be stored in the same bucket. | `bool` | `false` | no |
+| <a name="s3_bucket_lifecycle_logging_enabled"></a> [s3\_bucket\_lifecycle\_logging\_enabled](#input\_s3\_bucket\_lifecycle\_logging\_enabled) | Whether to enable lifecyle rules for logging S3 bucket. | `bool` | `false` | no |
+| <a name="s3_bucket_lifecycle_rules_logging"></a> [s3\_bucket\_lifecycle\_rules\_logging](#input\_s3\_bucket\_lifecycle\_rules\_logging) | This allows to specify a set of lifecycle rules for S3 bucket logging, which can be customized as needed. | `map(object)` | `` | no |
+| <a name="s3_bucket_lifecycle_rules_tfstate_enabled"></a> [s3\_bucket\_lifecycle\_rules\_tfstate\_enabled](#input\_s3\_bucket\_lifecycle\_tfstate\_enabled) | Whether to enable lifecyle rules for tfstate S3 bucket. | `bool` | `false` | no |
+| <a name="s3_bucket_lifecycle_rules_tfstate"></a> [s3\_bucket\_lifecycle\_rules\_tfstate](#input\_s3\_bucket\_lifecycle\_rules\_tfstate) | This allows to specify a set of lifecycle rules for S3 bucket tfstate, which can be customized as needed. | `map(object)` | `` | no |
+| <a name="s3_bucket_enable_object_lock_logging"></a> [s3\_bucket\_enable\_object\_lock\_logging](#input\_s3\_bucket\_enable\_object\_lock\_logging) | Whether to enable object lock for logging S3 bucket. | `bool` | `true` | no |
+| <a name="s3_bucket_object_lock_mode_logging"></a> [s3\_bucket\_enable\_object\_lock\_mode\_logging](#input\_s3\_bucket\_enable\_object\_lock\_mode\_logging) | Default Object Lock retention mode , want to apply to new objects placed in the specified bucket. Valid values: COMPLIANCE, GOVERNANCE." | `string` | `GOVERNANCE` | no |
+| <a name="s3_bucket_object_lock_days_logging"></a> [s3\_bucket\_enable\_object\_lock\_days\_logging](#input\_s3\_bucket\_enable\_object\_lock\_logging) | Optional, Required if years is not specified) Number of days that you want to specify for the default retention period. | `number` | `0` | no |
+| <a name="s3_bucket_object_lock_years_logging"></a> [s3\_bucket\_enable\_object\_lock\_years\_logging](#input\_s3\_bucket\_enable\_object\_lock\_logging) | Optional, Required if days is not specified) Number of years that you want to specify for the default retention period. | `number` | `2` | no |
+| <a name="s3_bucket_enable_object_lock_tfstate"></a> [s3\_bucket\_enable\_object\_lock\_tfstate](#input\_s3\_bucket\_enable\_object\_lock\_tfstate) | Whether to enable object lock for tfstate S3 bucket. | `bool` | `true` | no |
+| <a name="s3_bucket_object_lock_mode__tfstate"></a> [s3\_bucket\_enable\_object\_lock\_mode\_tfstate](#input\_s3\_bucket\_enable\_object\_lock\_mode\_tfstate) | Default Object Lock retention mode you want to apply to new objects placed in the specified bucket. Valid values: COMPLIANCE, GOVERNANCE." | `string` | `GOVERNANCE` | no |
+| <a name="s3_bucket_object_lock_days_tfstate"></a> [s3\_bucket\_enable\_object\_lock\_days\_tfstate](#input\_s3\_bucket\_enable\_object\_lock\_tfstate) | Optional, Required if years is not specified) Number of days that you want to specify for the default retention period. | `number` | `0` | no |
+| <a name="s3_bucket_object_lock_years_tfstate"></a> [s3\_bucket\_enable\_object\_lock\_years\_tfstate](#input\_s3\_bucket\_enable\_object\_lock\_tfstate) | Optional, Required if days is not specified) Number of years that you want to specify for the default retention period. | `number` | `2` | no |
 
 ## Outputs
 
