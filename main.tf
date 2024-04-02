@@ -43,46 +43,69 @@ resource "aws_s3_bucket_object_lock_configuration" "object_lock_tfstate" {
 
   rule {
     default_retention {
-      mode  = var.s3_bucket_object_lock_mode_tfstate
-      
-      // Use days if provided, otherwise use years converted to days
-      days  = var.s3_bucket_object_lock_days_tfstate > 0 ? var.s3_bucket_object_lock_days_tfstate : null
-      years = var.s3_bucket_object_lock_years_tfstate > 0 ? var.s3_bucket_object_lock_years_tfstate : null
+      mode  = var.s3_object_lock_config_tfstate.s3_bucket_object_lock_mode_tfstate
+      days  = var.s3_object_lock_config_tfstate.s3_bucket_object_lock_days_tfstate > 0 ? var.s3_object_lock_config_tfstate.s3_bucket_object_lock_days_tfstate : null
+      years = var.s3_object_lock_config_tfstate.s3_bucket_object_lock_years_tfstate > 0 ? var.s3_object_lock_config_tfstate.s3_bucket_object_lock_years_tfstate : null
     }
   }
 }
-
 resource "aws_s3_bucket_lifecycle_configuration" "s3_bucket_lifecycle_rules_tfstate" {
-  bucket = module.s3_bucket.s3_bucket_id
-   count  = var.s3_bucket_lifecycle_rules_tfstate_enabled ? 1 : 0
-  
-  dynamic "rule" {
-    for_each = var.s3_bucket_lifecycle_rules_tfstate
-
-    content {
-      id = rule.value.id
-
-      expiration {
-        days = rule.value.expiration_days
-      }
-
-      filter {
-        prefix = rule.value.filter_prefix
-      }
-
-      status = rule.value.status
-
-      dynamic "transition" {
-        for_each = rule.value.transitions
-
-        content {
-          days          = transition.value.days
-          storage_class = transition.value.storage_class
-        }
+  for_each = var.s3_bucket_lifecycle_rules_tfstate
+  bucket   = module.s3_bucket.s3_bucket_id
+  rule {
+    id = each.value.lifecycle_configuration_rule_name
+    dynamic "transition" {
+      for_each = each.value.enable_glacier_transition ? [1] : []
+      content {
+        days          = each.value.glacier_transition_days
+        storage_class = "GLACIER"
       }
     }
+    dynamic "transition" {
+      for_each = each.value.enable_deeparchive_transition ? [1] : []
+      content {
+        days          = each.value.deeparchive_transition_days
+        storage_class = "DEEP_ARCHIVE"
+      }
+    }
+    dynamic "transition" {
+      for_each = each.value.enable_standard_ia_transition ? [1] : []
+      content {
+        days          = each.value.standard_transition_days
+        storage_class = "STANDARD_IA"
+      }
+    }
+    dynamic "transition" {
+      for_each = each.value.enable_one_zone_ia ? [1] : []
+      content {
+        days          = each.value.one_zone_ia_days
+        storage_class = "ONEZONE_IA"
+      }
+    }
+    dynamic "transition" {
+      for_each = each.value.enable_intelligent_tiering ? [1] : []
+      content {
+        days          = each.value.intelligent_tiering_days
+        storage_class = "INTELLIGENT_TIERING"
+      }
+    }
+    dynamic "transition" {
+      for_each = each.value.enable_glacier_ir ? [1] : []
+      content {
+        days          = each.value.glacier_ir_days
+        storage_class = "GLACIER_IR"
+      }
+    }
+    dynamic "expiration" {
+      for_each = each.value.enable_current_object_expiration ? [1] : []
+      content {
+        days = each.value.expiration_days
+      }
+    }
+    status = each.value.status ? "Enabled" : "Disabled"
   }
 }
+
 module "s3_bucket" {
   source                                = "terraform-aws-modules/s3-bucket/aws"
   version                               = "4.1.0"
@@ -104,7 +127,7 @@ module "s3_bucket" {
     }
   }
 
-  logging = var.s3_bucket_logging ? {
+  logging = var.s3_bucket_logging_enabled ? {
     target_bucket = module.log_bucket[0].s3_bucket_id
     target_prefix = "log/"
   } : {}
@@ -148,13 +171,13 @@ resource "aws_kms_key" "kms_key" {
 }
 
 resource "aws_kms_alias" "custom_alias" {
-  count         = var.s3_bucket_logging ? 1 : 0
+  count         = var.s3_bucket_logging_enabled ? 1 : 0
   name          = "alias/${var.s3_bucket_name}-kms-03"
   target_key_id = aws_kms_key.kms_key.id
 }
 
 data "aws_iam_policy_document" "default" {
-  count   = var.s3_bucket_logging ? 1 : 0
+  count   = var.s3_bucket_logging_enabled ? 1 : 0
   version = "2012-10-17"
   statement {
     sid    = "Enable IAM User Permissions"
@@ -245,7 +268,7 @@ data "aws_iam_policy_document" "default" {
 }
 
 resource "aws_kms_key_policy" "cloudtrail_key_policy" {
-  count  = var.s3_bucket_logging ? 1 : 0
+  count  = var.s3_bucket_logging_enabled ? 1 : 0
   key_id = aws_kms_key.kms_key.key_id
   policy = data.aws_iam_policy_document.default[0].json
 }

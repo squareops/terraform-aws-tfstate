@@ -53,7 +53,7 @@ variable "s3_bucket_versioning_enabled" {
   type        = bool
 }
 
-variable "s3_bucket_logging" {
+variable "s3_bucket_logging_enabled" {
   description = "Configuration for S3 bucket access logging."
   default     = true
   type        = bool
@@ -221,67 +221,30 @@ variable "s3_bucket_enable_object_lock_logging" {
   default     = true
 }
 
-variable "s3_bucket_object_lock_mode_logging" {
-  description = "Default Object Lock retention mode you want to apply to new objects placed in the specified bucket. Valid values: COMPLIANCE, GOVERNANCE."
-  type        = string
-  default     = "GOVERNANCE"
-}
-
-variable "s3_bucket_object_lock_days_logging" {
-  description = "Optional, Required if years is not specified) Number of days that you want to specify for the default retention period."
-  type        = number
-  default     = 0
-}
-
-variable "s3_bucket_object_lock_years_logging" {
-  description = "Optional, Required if days is not specified) Number of years that you want to specify for the default retention period."
-  type        = number
-  default     = 0
-}
-
 variable "s3_bucket_lifecycle_rules_logging" {
+  description = "A map of lifecycle rules for logging AWS S3 bucket."
   type = map(object({
-    id                = string
-    expiration_days   = number
-    filter_prefix     = string
-    status            = string
-    transitions       = list(object({
-      days          = number
-      storage_class = string
-    }))
+    status                            = optional(bool, false)
+    enable_glacier_transition         = optional(bool, false)
+    enable_deeparchive_transition     = optional(bool, false)
+    enable_standard_ia_transition     = optional(bool, false)
+    enable_one_zone_ia                = optional(bool, false)
+    enable_current_object_expiration  = optional(bool, false)
+    enable_intelligent_tiering        = optional(bool, false)
+    enable_glacier_ir                 = optional(bool, false)
+    lifecycle_configuration_rule_name = optional(string, "lifecycle_configuration_rule_name")
+    standard_transition_days          = optional(number, 30)
+    glacier_transition_days           = optional(number, 60)
+    deeparchive_transition_days       = optional(number, 150)
+    one_zone_ia_days                  = optional(number, 40)
+    intelligent_tiering_days          = optional(number, 50)
+    glacier_ir_days                   = optional(number, 160)
+    expiration_days                   = number
   }))
   default = {
-    rule1 = {
-      id                = "rule1"
-      expiration_days   = 30
-      filter_prefix     = "prefix1"
-      status            = "Enabled"
-      transitions = [
-        {
-          days          = 60
-          storage_class = "STANDARD_IA"
-        },
-        {
-          days          = 90
-          storage_class = "GLACIER"
-        }
-      ]
-    }
-    rule2 = {
-      id                = "rule2"
-      expiration_days   = 60
-      filter_prefix     = "prefix2"
-      status            = "Enabled"
-      transitions = [
-        {
-          days          = 90
-          storage_class = "STANDARD_IA"
-        },
-        {
-          days          = 120
-          storage_class = "GLACIER"
-        }
-      ]
+    default_rule = {
+      status          = false
+      expiration_days = 365
     }
   }
 }
@@ -292,79 +255,51 @@ variable "s3_bucket_enable_object_lock_tfstate" {
   default     = true
 }
 
-variable "s3_bucket_object_lock_mode_tfstate" {
-  description = "Default Object Lock retention mode you want to apply to new objects placed in the specified bucket. Valid values: COMPLIANCE, GOVERNANCE."
-  type        = string
-  default     = "GOVERNANCE"
-}
-
-variable "s3_bucket_object_lock_days_tfstate" {
-  description = "Optional, Required if years is not specified) Number of days that you want to specify for the default retention period."
-  type        = number
-  default     = null
-}
-
-variable "s3_bucket_object_lock_years_tfstate" {
-  description = "Optional, Required if days is not specified) Number of years that you want to specify for the default retention period."
-  type        = number
-  default     = null
-}
-
-variable "s3_bucket_lifecycle_rules_tfstate_enabled" {
-  description = "Whether to enable lifecyle rules for tfstate S3 bucket."
-  type        = bool
-  default     = true
-}
-
-variable "s3_bucket_lifecycle_logging_enabled" {
-  description = "Whether to enable lifecyle rules for logging S3 bucket."
-  type        = bool
-  default     = true
-}
-
 variable "s3_bucket_lifecycle_rules_tfstate" {
+  description = "A map of lifecycle rules for tfstate AWS S3 bucket."
   type = map(object({
-    id                = string
-    expiration_days   = number
-    filter_prefix     = string
-    status            = string
-    transitions       = list(object({
-      days          = number
-      storage_class = string
-    }))
+    status                            = optional(bool, false)
+    enable_glacier_transition         = optional(bool, false)
+    enable_deeparchive_transition     = optional(bool, false)
+    enable_standard_ia_transition     = optional(bool, false)
+    enable_one_zone_ia                = optional(bool, false)
+    enable_current_object_expiration  = optional(bool, false)
+    enable_intelligent_tiering        = optional(bool, false)
+    enable_glacier_ir                 = optional(bool, false)
+    lifecycle_configuration_rule_name = optional(string, "lifecycle_configuration_rule_name")
+    standard_transition_days          = optional(number, 30)
+    glacier_transition_days           = optional(number, 60)
+    deeparchive_transition_days       = optional(number, 150)
+    one_zone_ia_days                  = optional(number, 40)
+    intelligent_tiering_days          = optional(number, 50)
+    glacier_ir_days                   = optional(number, 160)
+    expiration_days                   = number
   }))
   default = {
-    rule1 = {
-      id                = "rule1"
-      expiration_days   = 30
-      filter_prefix     = "prefix1"
-      status            = "Enabled"
-      transitions = [
-        {
-          days          = 60
-          storage_class = "STANDARD_IA"
-        },
-        {
-          days          = 90
-          storage_class = "GLACIER"
-        }
-      ]
+    default_rule = {
+      status          = false
+      expiration_days = 365
     }
-    rule2 = {
-      id                = "rule2"
-      expiration_days   = 60
-      filter_prefix     = "prefix2"
-      status            = "Enabled"
-      transitions = [
-        {
-          days          = 90
-          storage_class = "STANDARD_IA"
-        },
-        {
-          days          = 120
-          storage_class = "GLACIER"
-        }
-      ]
-    }
+  }
+}
+
+variable "s3_object_lock_config_logging" {
+  description = "Additional Configuration for the s3 object lock for AWS S3 logging bucket."
+  type        = map(string)
+  default = {
+    s3_bucket_object_lock_mode_logging  = ""
+    s3_bucket_object_lock_days_logging  = ""
+    s3_bucket_object_lock_years_logging = ""
+
+  }
+}
+
+variable "s3_object_lock_config_tfstate" {
+  description = "Additional Configuration for the s3 object lock for AWS S3 logging bucket."
+  type        = map(string)
+  default = {
+    s3_bucket_object_lock_mode_tfstate  = ""
+    s3_bucket_object_lock_days_tfstate  = ""
+    s3_bucket_object_lock_years_tfstate = ""
   }
 }
