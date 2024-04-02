@@ -1,7 +1,7 @@
 resource "aws_cloudtrail" "s3_cloudtrail" {
   count                         = var.s3_bucket_logging_enabled ? 1 : 0
   depends_on                    = [aws_iam_role_policy_attachment.s3_cloudtrail_policy_attachment]
-  name                          = format("%s-%s-s3-Trail", var.s3_bucket_name, var.aws_account_id)
+  name                          = format("%s-%s-s3-trail", var.s3_bucket_name, var.aws_account_id)
   s3_bucket_name                = module.log_bucket[0].s3_bucket_id
   s3_key_prefix                 = var.cloudtrail_s3_key_prefix
   include_global_service_events = var.s3_bucket_include_global_service_events

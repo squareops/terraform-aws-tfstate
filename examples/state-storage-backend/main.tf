@@ -2,7 +2,7 @@ locals {
   aws_region                              = "us-east-1"
   aws_account_id                          = "767398031518" # AWS Account ID
   environment                             = "prod"
-  s3_bucket_logging                       = "true"
+  s3_bucket_logging_enabled               = "true"
   s3_bucket_name                          = "prod-tfstate"
   s3_bucket_force_destroy                 = true
   s3_bucket_versioning_enabled            = true
@@ -21,11 +21,7 @@ locals {
 
   s3_bucket_lifecycle_rules_logging = {
     default_rule = {
-      status                            = true
-      enable_one_zone_ia                = true
-      lifecycle_configuration_rule_name = "default_lifecycle_rule"
-      one_zone_ia_days                  = 90
-      expiration_days                   = 365
+      status = false
     }
   }
 
@@ -33,20 +29,16 @@ locals {
 
   s3_bucket_lifecycle_rules_tfstate = {
     default_rule = {
-      status                            = true
-      lifecycle_configuration_rule_name = "default_lifecycle_rule"
-      enable_glacier_transition         = true
-      glacier_transition_days           = 150
-      expiration_days                   = 365
+      status = true
     }
   }
 }
 
 module "backend" {
-  source                               = "squareops/tfstate/aws"
+  source                               = "../../"
   aws_region                           = local.aws_region
   aws_account_id                       = local.aws_account_id
-  s3_bucket_logging                    = local.s3_bucket_logging
+  s3_bucket_logging_enabled            = local.s3_bucket_logging_enabled
   s3_bucket_name                       = local.s3_bucket_name ############unique global s3 bucket name
   environment                          = local.environment
   s3_bucket_force_destroy              = local.s3_bucket_force_destroy

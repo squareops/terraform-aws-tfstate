@@ -14,7 +14,7 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_backend"></a> [backend](#module\_backend) | squareops/tfstate/aws | n/a |
+| <a name="module_backend"></a> [backend](#module\_backend) | ../../ | n/a |
 
 ## Resources
 
@@ -28,6 +28,8 @@ No inputs.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_cloudtrail_arn"></a> [cloudtrail\_arn](#output\_cloudtrail\_arn) | The Amazon Resource Name (ARN) of the CloudTrail service that records AWS API calls and events. |
+| <a name="output_cloudtrail_id"></a> [cloudtrail\_id](#output\_cloudtrail\_id) | The unique identifier for the CloudTrail service, used for referencing and managing the CloudTrail configuration. |
 | <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | Name of the DynamoDB table that will be used to manage locking and unlocking of the Terraform state file. |
 | <a name="output_s3_bucket_region"></a> [s3\_bucket\_region](#output\_s3\_bucket\_region) | Specify the region in which an S3 bucket will be created by the module. |
 | <a name="output_s3_log_bucket_name"></a> [s3\_log\_bucket\_name](#output\_s3\_log\_bucket\_name) | Name of the S3 bucket that will be used to store logs for this module. |

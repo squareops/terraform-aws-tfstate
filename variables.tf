@@ -243,8 +243,7 @@ variable "s3_bucket_lifecycle_rules_logging" {
   }))
   default = {
     default_rule = {
-      status          = false
-      expiration_days = 365
+      status = false
     }
   }
 }
@@ -258,7 +257,7 @@ variable "s3_bucket_enable_object_lock_tfstate" {
 variable "s3_bucket_lifecycle_rules_tfstate" {
   description = "A map of lifecycle rules for tfstate AWS S3 bucket."
   type = map(object({
-    status                            = optional(bool, false)
+    status                            = bool
     enable_glacier_transition         = optional(bool, false)
     enable_deeparchive_transition     = optional(bool, false)
     enable_standard_ia_transition     = optional(bool, false)
@@ -273,12 +272,11 @@ variable "s3_bucket_lifecycle_rules_tfstate" {
     one_zone_ia_days                  = optional(number, 40)
     intelligent_tiering_days          = optional(number, 50)
     glacier_ir_days                   = optional(number, 160)
-    expiration_days                   = number
+    expiration_days                   = optional(number, 365)
   }))
   default = {
     default_rule = {
-      status          = false
-      expiration_days = 365
+      status = false
     }
   }
 }
@@ -295,7 +293,7 @@ variable "s3_object_lock_config_logging" {
 }
 
 variable "s3_object_lock_config_tfstate" {
-  description = "Additional Configuration for the s3 object lock for AWS S3 logging bucket."
+  description = "Additional Configuration for the s3 object lock for AWS S3 tfstate bucket."
   type        = map(string)
   default = {
     s3_bucket_object_lock_mode_tfstate  = ""

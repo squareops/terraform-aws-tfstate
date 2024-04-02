@@ -26,21 +26,13 @@ module "backend" {
   s3_log_bucket_lifecycle_enabled           = true
   s3_bucket_lifecycle_rules_logging         = {
     default_rule = {
-      status                            = true
-      enable_one_zone_ia                = true
-      lifecycle_configuration_rule_name = "default_lifecycle_rule"
-      one_zone_ia_days                  = 90
-      expiration_days                   = 365
+      status                            = false
     }
   }
   cloudtrail_s3_key_prefix                  = "log/"
   s3_bucket_lifecycle_rules_tfstate         = = {
     default_rule = {
-      status                            = true
-      lifecycle_configuration_rule_name = "default_lifecycle_rule"
-      enable_glacier_transition         = true
-      glacier_transition_days           = 150
-      expiration_days                   = 365
+      status                            = false
     }
   }
    s3_bucket_enable_object_lock_logging = true
@@ -122,7 +114,7 @@ In this module, we have implemented the following CIS Compliance checks for S3:
 | [aws_s3_bucket_object_lock_configuration.object_lock_tfstate](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_object_lock_configuration) | resource |
 | [aws_iam_policy_document.bucket_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.cloudtrail_assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
-| [aws_iam_policy_document.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.iam_policy_document](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
 ## Inputs
 
@@ -160,8 +152,8 @@ In this module, we have implemented the following CIS Compliance checks for S3:
 | <a name="input_s3_bucket_ignore_public_acls"></a> [s3\_bucket\_ignore\_public\_acls](#input\_s3\_bucket\_ignore\_public\_acls) | Whether Amazon S3 should ignore public ACLs for this bucket. | `bool` | `true` | no |
 | <a name="input_s3_bucket_include_global_service_events"></a> [s3\_bucket\_include\_global\_service\_events](#input\_s3\_bucket\_include\_global\_service\_events) | Whether the trail is publishing events from global services such as IAM to the log files. | `bool` | `true` | no |
 | <a name="input_s3_bucket_include_management_events"></a> [s3\_bucket\_include\_management\_events](#input\_s3\_bucket\_include\_management\_events) | Whether to include management events for your trail. | `bool` | `true` | no |
-| <a name="input_s3_bucket_lifecycle_rules_logging"></a> [s3\_bucket\_lifecycle\_rules\_logging](#input\_s3\_bucket\_lifecycle\_rules\_logging) | A map of lifecycle rules for logging AWS S3 bucket. | <pre>map(object({<br>    status                            = optional(bool, false)<br>    enable_glacier_transition         = optional(bool, false)<br>    enable_deeparchive_transition     = optional(bool, false)<br>    enable_standard_ia_transition     = optional(bool, false)<br>    enable_one_zone_ia                = optional(bool, false)<br>    enable_current_object_expiration  = optional(bool, false)<br>    enable_intelligent_tiering        = optional(bool, false)<br>    enable_glacier_ir                 = optional(bool, false)<br>    lifecycle_configuration_rule_name = optional(string, "lifecycle_configuration_rule_name")<br>    standard_transition_days          = optional(number, 30)<br>    glacier_transition_days           = optional(number, 60)<br>    deeparchive_transition_days       = optional(number, 150)<br>    one_zone_ia_days                  = optional(number, 40)<br>    intelligent_tiering_days          = optional(number, 50)<br>    glacier_ir_days                   = optional(number, 160)<br>    expiration_days                   = number<br>  }))</pre> | <pre>{<br>  "default_rule": {<br>    "expiration_days": 365,<br>    "status": false<br>  }<br>}</pre> | no |
-| <a name="input_s3_bucket_lifecycle_rules_tfstate"></a> [s3\_bucket\_lifecycle\_rules\_tfstate](#input\_s3\_bucket\_lifecycle\_rules\_tfstate) | A map of lifecycle rules for tfstate AWS S3 bucket. | <pre>map(object({<br>    status                            = optional(bool, false)<br>    enable_glacier_transition         = optional(bool, false)<br>    enable_deeparchive_transition     = optional(bool, false)<br>    enable_standard_ia_transition     = optional(bool, false)<br>    enable_one_zone_ia                = optional(bool, false)<br>    enable_current_object_expiration  = optional(bool, false)<br>    enable_intelligent_tiering        = optional(bool, false)<br>    enable_glacier_ir                 = optional(bool, false)<br>    lifecycle_configuration_rule_name = optional(string, "lifecycle_configuration_rule_name")<br>    standard_transition_days          = optional(number, 30)<br>    glacier_transition_days           = optional(number, 60)<br>    deeparchive_transition_days       = optional(number, 150)<br>    one_zone_ia_days                  = optional(number, 40)<br>    intelligent_tiering_days          = optional(number, 50)<br>    glacier_ir_days                   = optional(number, 160)<br>    expiration_days                   = number<br>  }))</pre> | <pre>{<br>  "default_rule": {<br>    "expiration_days": 365,<br>    "status": false<br>  }<br>}</pre> | no |
+| <a name="input_s3_bucket_lifecycle_rules_logging"></a> [s3\_bucket\_lifecycle\_rules\_logging](#input\_s3\_bucket\_lifecycle\_rules\_logging) | A map of lifecycle rules for logging AWS S3 bucket. | <pre>map(object({<br>    status                            = optional(bool, false)<br>    enable_glacier_transition         = optional(bool, false)<br>    enable_deeparchive_transition     = optional(bool, false)<br>    enable_standard_ia_transition     = optional(bool, false)<br>    enable_one_zone_ia                = optional(bool, false)<br>    enable_current_object_expiration  = optional(bool, false)<br>    enable_intelligent_tiering        = optional(bool, false)<br>    enable_glacier_ir                 = optional(bool, false)<br>    lifecycle_configuration_rule_name = optional(string, "lifecycle_configuration_rule_name")<br>    standard_transition_days          = optional(number, 30)<br>    glacier_transition_days           = optional(number, 60)<br>    deeparchive_transition_days       = optional(number, 150)<br>    one_zone_ia_days                  = optional(number, 40)<br>    intelligent_tiering_days          = optional(number, 50)<br>    glacier_ir_days                   = optional(number, 160)<br>    expiration_days                   = number<br>  }))</pre> | <pre>{<br>  "default_rule": {<br>    "status": false<br>  }<br>}</pre> | no |
+| <a name="input_s3_bucket_lifecycle_rules_tfstate"></a> [s3\_bucket\_lifecycle\_rules\_tfstate](#input\_s3\_bucket\_lifecycle\_rules\_tfstate) | A map of lifecycle rules for tfstate AWS S3 bucket. | <pre>map(object({<br>    status                            = bool<br>    enable_glacier_transition         = optional(bool, false)<br>    enable_deeparchive_transition     = optional(bool, false)<br>    enable_standard_ia_transition     = optional(bool, false)<br>    enable_one_zone_ia                = optional(bool, false)<br>    enable_current_object_expiration  = optional(bool, false)<br>    enable_intelligent_tiering        = optional(bool, false)<br>    enable_glacier_ir                 = optional(bool, false)<br>    lifecycle_configuration_rule_name = optional(string, "lifecycle_configuration_rule_name")<br>    standard_transition_days          = optional(number, 30)<br>    glacier_transition_days           = optional(number, 60)<br>    deeparchive_transition_days       = optional(number, 150)<br>    one_zone_ia_days                  = optional(number, 40)<br>    intelligent_tiering_days          = optional(number, 50)<br>    glacier_ir_days                   = optional(number, 160)<br>    expiration_days                   = optional(number, 365)<br>  }))</pre> | <pre>{<br>  "default_rule": {<br>    "status": false<br>  }<br>}</pre> | no |
 | <a name="input_s3_bucket_logging_enabled"></a> [s3\_bucket\_logging\_enabled](#input\_s3\_bucket\_logging\_enabled) | Configuration for S3 bucket access logging. | `bool` | `true` | no |
 | <a name="input_s3_bucket_name"></a> [s3\_bucket\_name](#input\_s3\_bucket\_name) | Name of the S3 bucket to be created. | `string` | `""` | no |
 | <a name="input_s3_bucket_object_ownership"></a> [s3\_bucket\_object\_ownership](#input\_s3\_bucket\_object\_ownership) | Object ownership. Valid values: BucketOwnerEnforced, BucketOwnerPreferred or ObjectWriter. | `string` | `"BucketOwnerPreferred"` | no |
@@ -169,13 +161,15 @@ In this module, we have implemented the following CIS Compliance checks for S3:
 | <a name="input_s3_bucket_versioning_enabled"></a> [s3\_bucket\_versioning\_enabled](#input\_s3\_bucket\_versioning\_enabled) | Whether or not to enable versioning for the S3 bucket, which allows multiple versions of an object to be stored in the same bucket. | `bool` | `false` | no |
 | <a name="input_s3_log_bucket_lifecycle_enabled"></a> [s3\_log\_bucket\_lifecycle\_enabled](#input\_s3\_log\_bucket\_lifecycle\_enabled) | The S3 bucket's lifecycle rule for log data to be enabled or not. | `bool` | `true` | no |
 | <a name="input_s3_object_lock_config_logging"></a> [s3\_object\_lock\_config\_logging](#input\_s3\_object\_lock\_config\_logging) | Additional Configuration for the s3 object lock for AWS S3 logging bucket. | `map(string)` | <pre>{<br>  "s3_bucket_object_lock_days_logging": "",<br>  "s3_bucket_object_lock_mode_logging": "",<br>  "s3_bucket_object_lock_years_logging": ""<br>}</pre> | no |
-| <a name="input_s3_object_lock_config_tfstate"></a> [s3\_object\_lock\_config\_tfstate](#input\_s3\_object\_lock\_config\_tfstate) | Additional Configuration for the s3 object lock for AWS S3 logging bucket. | `map(string)` | <pre>{<br>  "s3_bucket_object_lock_days_tfstate": "",<br>  "s3_bucket_object_lock_mode_tfstate": "",<br>  "s3_bucket_object_lock_years_tfstate": ""<br>}</pre> | no |
+| <a name="input_s3_object_lock_config_tfstate"></a> [s3\_object\_lock\_config\_tfstate](#input\_s3\_object\_lock\_config\_tfstate) | Additional Configuration for the s3 object lock for AWS S3 tfstate bucket. | `map(string)` | <pre>{<br>  "s3_bucket_object_lock_days_tfstate": "",<br>  "s3_bucket_object_lock_mode_tfstate": "",<br>  "s3_bucket_object_lock_years_tfstate": ""<br>}</pre> | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
 | <a name="output_aws_region"></a> [aws\_region](#output\_aws\_region) | Name of the region in which Cloudtrail is created |
+| <a name="output_cloudtrail_arn"></a> [cloudtrail\_arn](#output\_cloudtrail\_arn) | The Amazon Resource Name (ARN) of the CloudTrail service that records AWS API calls and events. |
+| <a name="output_cloudtrail_id"></a> [cloudtrail\_id](#output\_cloudtrail\_id) | The unique identifier for the CloudTrail service, used for referencing and managing the CloudTrail configuration. |
 | <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | Name of the DynamoDB table that will be used to manage locking and unlocking of the terraform state file. |
 | <a name="output_s3_log_bucket_name"></a> [s3\_log\_bucket\_name](#output\_s3\_log\_bucket\_name) | Name of the S3 bucket that will be used to store logs. |
 | <a name="output_s3_state_bucket_name"></a> [s3\_state\_bucket\_name](#output\_s3\_state\_bucket\_name) | Specify the region in which an S3 bucket will be created by the module. |

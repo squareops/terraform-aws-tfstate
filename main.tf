@@ -172,11 +172,11 @@ resource "aws_kms_key" "kms_key" {
 
 resource "aws_kms_alias" "custom_alias" {
   count         = var.s3_bucket_logging_enabled ? 1 : 0
-  name          = "alias/${var.s3_bucket_name}-kms-03"
+  name          = "alias/${var.s3_bucket_name}-kms"
   target_key_id = aws_kms_key.kms_key.id
 }
 
-data "aws_iam_policy_document" "default" {
+data "aws_iam_policy_document" "iam_policy_document" {
   count   = var.s3_bucket_logging_enabled ? 1 : 0
   version = "2012-10-17"
   statement {
@@ -270,5 +270,5 @@ data "aws_iam_policy_document" "default" {
 resource "aws_kms_key_policy" "cloudtrail_key_policy" {
   count  = var.s3_bucket_logging_enabled ? 1 : 0
   key_id = aws_kms_key.kms_key.key_id
-  policy = data.aws_iam_policy_document.default[0].json
+  policy = data.aws_iam_policy_document.iam_policy_document[0].json
 }
