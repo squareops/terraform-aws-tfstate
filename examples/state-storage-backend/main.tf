@@ -35,7 +35,7 @@ locals {
 }
 
 module "backend" {
-  source                               = "../../"
+  source                               = "squareops/tfstate/aws"
   aws_region                           = local.aws_region
   aws_account_id                       = local.aws_account_id
   s3_bucket_logging_enabled            = local.s3_bucket_logging_enabled
