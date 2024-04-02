@@ -17,4 +17,3 @@ output "s3_log_bucket_name" {
   description = "Name of the S3 bucket that will be used to store logs for this module."
   value       = module.backend.s3_log_bucket_name
 }
-

@@ -28,10 +28,10 @@ No inputs.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_bucket_region"></a> [bucket\_region](#output\_bucket\_region) | Specify the region in which an S3 bucket will be created by the module. |
 | <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | Name of the DynamoDB table that will be used to manage locking and unlocking of the Terraform state file. |
-| <a name="output_log_bucket_name"></a> [log\_bucket\_name](#output\_log\_bucket\_name) | Name of the S3 bucket that will be used to store logs for this module. |
-| <a name="output_state_bucket_name"></a> [state\_bucket\_name](#output\_state\_bucket\_name) | Name of the S3 bucket that will be used to store the Terraform state file. |
+| <a name="output_s3_bucket_region"></a> [s3\_bucket\_region](#output\_s3\_bucket\_region) | Specify the region in which an S3 bucket will be created by the module. |
+| <a name="output_s3_log_bucket_name"></a> [s3\_log\_bucket\_name](#output\_s3\_log\_bucket\_name) | Name of the S3 bucket that will be used to store logs for this module. |
+| <a name="output_s3_state_bucket_name"></a> [s3\_state\_bucket\_name](#output\_s3\_state\_bucket\_name) | Name of the S3 bucket that will be used to store the Terraform state file. |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Our Other Projects
 
