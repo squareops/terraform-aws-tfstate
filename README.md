@@ -26,12 +26,14 @@ module "backend" {
   s3_log_bucket_lifecycle_enabled           = true
   s3_bucket_lifecycle_rules_logging         = {
     default_rule = {
+      lifecycle_configuration_rule_name = "lifecycle_configuration_rule_name"
       status                            = false
     }
   }
   cloudtrail_s3_key_prefix                  = "log/"
   s3_bucket_lifecycle_rules_tfstate         = = {
     default_rule = {
+      lifecycle_configuration_rule_name = "lifecycle_configuration_rule_name"
       status                            = false
     }
   }
@@ -120,7 +122,7 @@ In this module, we have implemented the following CIS Compliance checks for S3:
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_additional_tags"></a> [additional\_tags](#input\_additional\_tags) | Additional tags to be applied to AWS resources | `map(string)` | `{}` | no |
+| <a name="input_additional_aws_tags"></a> [additional\_aws\_tags](#input\_additional\_aws\_tags) | Additional tags to be applied to AWS resources | `map(string)` | `{}` | no |
 | <a name="input_aws_account_id"></a> [aws\_account\_id](#input\_aws\_account\_id) | Account ID of the AWS Account. | `string` | `""` | no |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | Name of the AWS region where S3 bucket is to be created. | `string` | `""` | no |
 | <a name="input_cloudtrail_data_resources_enable"></a> [cloudtrail\_data\_resources\_enable](#input\_cloudtrail\_data\_resources\_enable) | Set to true to enable data resources in resource aws\_cloudtrail. | `bool` | `true` | no |

@@ -1,7 +1,7 @@
 locals {
-  aws_region                              = "us-east-1"
+  aws_region                              = "ap-northeast-1"
   aws_account_id                          = "767398031518" # AWS Account ID
-  environment                             = "prod"
+  environment                             = "stg"
   s3_bucket_logging_enabled               = "true"
   s3_bucket_name                          = "prod-tfstate"
   s3_bucket_force_destroy                 = true
@@ -11,7 +11,7 @@ locals {
   cloudwatch_log_group_skip_destroy       = false
   cloudtrail_data_resources_enable        = true
   cloudtrail_s3_key_prefix                = "logs"
-  additional_tags = {
+  additional_aws_tags = {
     Owner      = "organization_name"
     Expires    = "Never"
     Department = "Engineering"
@@ -21,7 +21,10 @@ locals {
 
   s3_bucket_lifecycle_rules_logging = {
     default_rule = {
-      status = false
+      lifecycle_configuration_rule_name = "lifecycle_configuration_rule_name"
+      enable_standard_ia_transition     = true
+      standard_transition_days          = 30
+      status                            = true
     }
   }
 
@@ -29,13 +32,17 @@ locals {
 
   s3_bucket_lifecycle_rules_tfstate = {
     default_rule = {
-      status = true
+      lifecycle_configuration_rule_name = "lifecycle_configuration_rule_name"
+      enable_standard_ia_transition     = true
+      standard_transition_days          = 30
+      status                            = true
     }
   }
 }
 
 module "backend" {
-  source                               = "squareops/tfstate/aws"
+  # source                               = "squareops/tfstate/aws"
+  source                               = "../../"
   aws_region                           = local.aws_region
   aws_account_id                       = local.aws_account_id
   s3_bucket_logging_enabled            = local.s3_bucket_logging_enabled
@@ -51,7 +58,7 @@ module "backend" {
   s3_bucket_lifecycle_rules_logging    = local.s3_bucket_lifecycle_rules_logging
   cloudtrail_s3_key_prefix             = local.cloudtrail_s3_key_prefix
   s3_bucket_lifecycle_rules_tfstate    = local.s3_bucket_lifecycle_rules_tfstate
-  additional_tags                      = local.additional_tags
+  additional_aws_tags                  = local.additional_aws_tags
   s3_bucket_enable_object_lock_logging = true
   s3_object_lock_config_logging = {
     s3_bucket_object_lock_mode_logging  = "GOVERNANCE"

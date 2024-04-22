@@ -16,7 +16,7 @@ resource "aws_iam_role" "iam_role" {
 EOF
   tags = merge(
     { "Name" = format("%s-%s", var.environment, var.s3_bucket_name) },
-    var.additional_tags,
+    var.additional_aws_tags,
   )
 }
 
@@ -156,7 +156,7 @@ resource "aws_dynamodb_table" "dynamodb_table" {
 
   tags = merge(
     { "Name" = format("%s-%s-%s", var.s3_bucket_name, "lock-dynamodb", var.aws_account_id) },
-    var.additional_tags,
+    var.additional_aws_tags,
   )
 }
 
@@ -166,7 +166,7 @@ resource "aws_kms_key" "kms_key" {
   enable_key_rotation     = var.kms_key_rotation_enabled
   tags = merge(
     { "Name" = format("%s-%s", var.environment, var.s3_bucket_name) },
-    var.additional_tags,
+    var.additional_aws_tags,
   )
 }
 

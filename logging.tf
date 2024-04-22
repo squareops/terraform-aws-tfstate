@@ -33,7 +33,7 @@ resource "aws_cloudtrail" "s3_cloudtrail" {
 
   tags = merge(
     { "Name" = format("%s-%s-s3", var.s3_bucket_name, var.aws_account_id) },
-    var.additional_tags,
+    var.additional_aws_tags,
   )
 }
 
@@ -46,7 +46,7 @@ resource "aws_cloudwatch_log_group" "s3_cloudwatch" {
   skip_destroy      = var.cloudwatch_log_group_skip_destroy
   tags = merge(
     { "Name" = format("%s-%s-s3", var.s3_bucket_name, var.aws_account_id) },
-    var.additional_tags,
+    var.additional_aws_tags,
   )
 }
 
@@ -56,7 +56,7 @@ resource "aws_iam_role" "s3_cloudtrail_cloudwatch_role" {
   assume_role_policy = data.aws_iam_policy_document.cloudtrail_assume_role[0].json
   tags = merge(
     { "Name" = format("%s-cloudtrail-cloudwatch-s3", var.s3_bucket_name) },
-    var.additional_tags,
+    var.additional_aws_tags,
   )
 }
 
@@ -104,7 +104,7 @@ resource "aws_iam_policy" "s3_cloudtrail_cloudwatch_policy" {
 
   tags = merge(
     { "Name" = format("%s-cloudtrail-cloudwatch-s3", var.s3_bucket_name) },
-    var.additional_tags,
+    var.additional_aws_tags,
   )
 }
 
