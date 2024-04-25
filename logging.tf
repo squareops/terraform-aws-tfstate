@@ -42,6 +42,7 @@ resource "aws_cloudwatch_log_group" "s3_cloudwatch" {
   name              = format("%s-%s-s3", var.s3_bucket_name, var.aws_account_id)
   retention_in_days = var.cloudwatch_log_retention_in_days
   kms_key_id        = aws_kms_key.kms_key.arn
+  skip_destroy      = var.cloudwatch_log_group_skip_destroy
 
   tags = merge(
     { "Name" = format("%s-%s-s3", var.s3_bucket_name, var.aws_account_id) },
@@ -102,6 +103,75 @@ resource "aws_iam_role_policy_attachment" "s3_cloudtrail_policy_attachment" {
   count      = var.s3_bucket_logging_enabled && var.cloudwatch_logging_enabled ? 1 : 0
   role       = aws_iam_role.s3_cloudtrail_cloudwatch_role[0].name
   policy_arn = aws_iam_policy.s3_cloudtrail_cloudwatch_policy[0].arn
+}
+
+resource "aws_s3_bucket_object_lock_configuration" "object_lock_logging" {
+  count  = var.s3_bucket_logging_enabled && var.s3_bucket_enable_object_lock_logging ? 1 : 0
+  bucket = var.s3_bucket_logging_enabled ? module.log_bucket[0].s3_bucket_id : null
+  rule {
+    default_retention {
+      mode  = var.s3_object_lock_config_logging.s3_bucket_object_lock_mode_logging
+      days  = var.s3_object_lock_config_logging.s3_bucket_object_lock_days_logging > 0 ? var.s3_object_lock_config_logging.s3_bucket_object_lock_days_logging : null
+      years = var.s3_object_lock_config_logging.s3_bucket_object_lock_years_logging > 0 ? var.s3_object_lock_config_logging.s3_bucket_object_lock_years_logging : null
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "s3_bucket_lifecycle_rules_logging" {
+  for_each = var.s3_bucket_lifecycle_rules_logging
+  bucket   = var.s3_bucket_logging_enabled ? module.log_bucket[0].s3_bucket_id : null
+  rule {
+    id = each.value.lifecycle_configuration_rule_name
+    dynamic "transition" {
+      for_each = each.value.enable_glacier_transition ? [1] : []
+      content {
+        days          = each.value.glacier_transition_days
+        storage_class = "GLACIER"
+      }
+    }
+    dynamic "transition" {
+      for_each = each.value.enable_deeparchive_transition ? [1] : []
+      content {
+        days          = each.value.deeparchive_transition_days
+        storage_class = "DEEP_ARCHIVE"
+      }
+    }
+    dynamic "transition" {
+      for_each = each.value.enable_standard_ia_transition ? [1] : []
+      content {
+        days          = each.value.standard_transition_days
+        storage_class = "STANDARD_IA"
+      }
+    }
+    dynamic "transition" {
+      for_each = each.value.enable_one_zone_ia ? [1] : []
+      content {
+        days          = each.value.one_zone_ia_days
+        storage_class = "ONEZONE_IA"
+      }
+    }
+    dynamic "transition" {
+      for_each = each.value.enable_intelligent_tiering ? [1] : []
+      content {
+        days          = each.value.intelligent_tiering_days
+        storage_class = "INTELLIGENT_TIERING"
+      }
+    }
+    dynamic "transition" {
+      for_each = each.value.enable_glacier_ir ? [1] : []
+      content {
+        days          = each.value.glacier_ir_days
+        storage_class = "GLACIER_IR"
+      }
+    }
+    dynamic "expiration" {
+      for_each = each.value.enable_current_object_expiration ? [1] : []
+      content {
+        days = each.value.expiration_days
+      }
+    }
+    status = each.value.status ? "Enabled" : "Disabled"
+  }
 }
 
 module "log_bucket" {
