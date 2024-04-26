@@ -1,9 +1,9 @@
 locals {
-  aws_region                              = "ap-northeast-1"
-  aws_account_id                          = "767398031518" # AWS Account ID
+  aws_region                              = "ap-south-1"
+  aws_account_id                          = "654654551614" # AWS Account ID
   environment                             = "stg"
-  s3_bucket_logging_enabled               = "true"
-  s3_bucket_name                          = "prod-tfstate"
+  s3_bucket_logging_enabled               = true
+  s3_bucket_name                          = "rachit-tfstate"
   s3_bucket_force_destroy                 = true
   s3_bucket_versioning_enabled            = true
   cloudwatch_logging_enabled              = true

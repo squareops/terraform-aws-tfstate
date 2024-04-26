@@ -1,6 +1,5 @@
 resource "aws_cloudtrail" "s3_cloudtrail" {
   count                         = var.s3_bucket_logging_enabled ? 1 : 0
-  depends_on                    = [aws_iam_role_policy_attachment.s3_cloudtrail_policy_attachment]
   name                          = format("%s-%s-s3-trail", var.s3_bucket_name, var.aws_account_id)
   s3_bucket_name                = module.log_bucket[0].s3_bucket_id
   s3_key_prefix                 = var.cloudtrail_s3_key_prefix
@@ -10,6 +9,7 @@ resource "aws_cloudtrail" "s3_cloudtrail" {
   cloud_watch_logs_role_arn     = var.cloudwatch_logging_enabled ? aws_iam_role.s3_cloudtrail_cloudwatch_role[0].arn : null
   cloud_watch_logs_group_arn    = var.cloudwatch_logging_enabled ? "${aws_cloudwatch_log_group.s3_cloudwatch[0].arn}:*" : null
   kms_key_id                    = aws_kms_key.kms_key.arn
+
   event_selector {
     read_write_type           = var.logging_read_write_type
     include_management_events = var.s3_bucket_include_management_events
@@ -38,12 +38,12 @@ resource "aws_cloudtrail" "s3_cloudtrail" {
 }
 
 resource "aws_cloudwatch_log_group" "s3_cloudwatch" {
-  count      = var.s3_bucket_logging_enabled && var.cloudwatch_logging_enabled ? 1 : 0
-  name       = format("%s-%s-s3", var.s3_bucket_name, var.aws_account_id)
-  kms_key_id = aws_kms_key.kms_key.arn
-
+  count             = var.s3_bucket_logging_enabled && var.cloudwatch_logging_enabled ? 1 : 0
+  name              = format("%s-%s-s3", var.s3_bucket_name, var.aws_account_id)
   retention_in_days = var.cloudwatch_log_retention_in_days
+  kms_key_id        = aws_kms_key.kms_key.arn
   skip_destroy      = var.cloudwatch_log_group_skip_destroy
+
   tags = merge(
     { "Name" = format("%s-%s-s3", var.s3_bucket_name, var.aws_account_id) },
     var.additional_aws_tags,
@@ -77,31 +77,22 @@ resource "aws_iam_policy" "s3_cloudtrail_cloudwatch_policy" {
   count = var.s3_bucket_logging_enabled && var.cloudwatch_logging_enabled ? 1 : 0
   name  = format("%s-cloudtrail-cloudwatch-s3", var.s3_bucket_name)
   policy = jsonencode({
-    Version = "2012-10-17",
+    Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "AWSCloudTrailCreateLogStream2014110",
-        Effect = "Allow",
-        Action = [
-          "logs:CreateLogStream",
-        ],
-        Resource = [
-          "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:${var.s3_bucket_name}-${var.aws_account_id}-s3:log-stream:*",
-        ],
+        Sid      = "AWSCloudTrailCreateLogStream2014110"
+        Effect   = "Allow"
+        Action   = ["logs:CreateLogStream"]
+        Resource = ["arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:${var.s3_bucket_name}-${var.aws_account_id}-s3:*"]
       },
       {
-        Sid    = "AWSCloudTrailPutLogEvents20141101",
-        Effect = "Allow",
-        Action = [
-          "logs:PutLogEvents",
-        ],
-        Resource = [
-          "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:${var.s3_bucket_name}-${var.aws_account_id}-s3:log-stream:*",
-        ],
+        Sid      = "AWSCloudTrailPutLogEvents20141101"
+        Effect   = "Allow"
+        Action   = ["logs:PutLogEvents"]
+        Resource = ["arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:${var.s3_bucket_name}-${var.aws_account_id}-s3:*"]
       },
-    ],
+    ]
   })
-
   tags = merge(
     { "Name" = format("%s-cloudtrail-cloudwatch-s3", var.s3_bucket_name) },
     var.additional_aws_tags,
@@ -214,7 +205,7 @@ module "log_bucket" {
             "Resource": "arn:aws:s3:::${var.s3_bucket_name}-${var.aws_account_id}-log-bucket",
             "Condition": {
                 "StringEquals": {
-                    "aws:SourceArn": "arn:aws:cloudtrail:${var.aws_region}:${var.aws_account_id}:trail/${var.s3_bucket_name}-${var.aws_account_id}-s3-Trail"
+                    "aws:SourceArn": "arn:aws:cloudtrail:${var.aws_region}:${var.aws_account_id}:trail/${var.s3_bucket_name}-${var.aws_account_id}-s3-trail"
                 }
             }
         },
@@ -227,7 +218,7 @@ module "log_bucket" {
             "Condition": {
                 "StringEquals": {
                     "s3:x-amz-acl": "bucket-owner-full-control",
-                    "aws:SourceArn": "arn:aws:cloudtrail:${var.aws_region}:${var.aws_account_id}:trail/${var.s3_bucket_name}-${var.aws_account_id}-s3-Trail"
+                    "aws:SourceArn": "arn:aws:cloudtrail:${var.aws_region}:${var.aws_account_id}:trail/${var.s3_bucket_name}-${var.aws_account_id}-s3-trail"
                 }
             }
         }
