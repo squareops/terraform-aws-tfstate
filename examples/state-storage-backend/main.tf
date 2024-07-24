@@ -9,7 +9,7 @@ locals {
 }
 
 module "backend" {
-  source                       = "squareops/tfstate/aws"
+  source                       = "../../"
   logging                      = true
   bucket_name                  = "production-tfstate-bucket" #unique global s3 bucket name
   environment                  = local.environment
