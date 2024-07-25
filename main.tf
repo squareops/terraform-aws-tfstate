@@ -97,18 +97,19 @@ module "s3_bucket" {
 
 # Create a DynampDB table for locking terraform state
 resource "aws_dynamodb_table" "dynamodb_table" {
-  name           = format("%s-%s-%s", var.bucket_name, "lock-dynamodb", data.aws_caller_identity.current.account_id)
-  hash_key       = "LockID"
-  read_capacity  = 20
-  write_capacity = 20
-
+  name         = format("%s-%s-%s", var.bucket_name, "lock-dynamodb", data.aws_caller_identity.current.account_id)
+  hash_key     = "LockID"
+  billing_mode = "PAY_PER_REQUEST"
   attribute {
     name = "LockID"
     type = "S"
   }
 
   tags = merge(
-    { "Name" = format("%s-%s-%s", var.bucket_name, "lock-dynamodb", data.aws_caller_identity.current.account_id) },
+    {
+      "Name" = format("%s-%s-%s", var.bucket_name, "lock-dynamodb", data.aws_caller_identity.current.account_id),
+      "Cost" = format("%s-%s-%s", var.bucket_name, "lock-dynamodb", data.aws_caller_identity.current.account_id)
+    },
     local.tags,
   )
 }
