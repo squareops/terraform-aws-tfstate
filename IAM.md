@@ -50,6 +50,16 @@ The Policy required is:
             "Sid": "VisualEditor2",
             "Effect": "Allow",
             "Action": [
+                "ec2:DescribeAccountAttributes"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor3",
+            "Effect": "Allow",
+            "Action": [
                 "iam:AttachRolePolicy",
                 "iam:CreatePolicy",
                 "iam:CreateRole",
@@ -73,14 +83,21 @@ The Policy required is:
             ]
         },
         {
-            "Sid": "VisualEditor3",
+            "Sid": "VisualEditor4",
             "Effect": "Allow",
             "Action": [
+                "kms:CreateAlias",
                 "kms:CreateKey",
+                "kms:DeleteAlias",
                 "kms:DescribeKey",
+                "kms:DisableKey",
+                "kms:EnableKey",
+                "kms:EnableKeyRotation",
                 "kms:GetKeyPolicy",
                 "kms:GetKeyRotationStatus",
+                "kms:ListAliases",
                 "kms:ListResourceTags",
+                "kms:PutKeyPolicy",
                 "kms:ScheduleKeyDeletion",
                 "kms:TagResource",
                 "kms:UntagResource"
@@ -90,17 +107,72 @@ The Policy required is:
             ]
         },
         {
-            "Sid": "VisualEditor4",
+            "Sid": "VisualEditor5",
             "Effect": "Allow",
             "Action": [
                 "logs:AssociateKmsKey",
                 "logs:CreateLogGroup",
                 "logs:DeleteLogGroup",
+                "logs:DeleteRetentionPolicy",
                 "logs:DescribeLogGroups",
                 "logs:DisassociateKmsKey",
                 "logs:ListTagsLogGroup",
+                "logs:PutRetentionPolicy",
                 "logs:TagLogGroup",
                 "logs:UntagLogGroup"
+            ],
+            "Resource": [
+                "*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor6",
+            "Effect": "Allow",
+            "Action": [
+                "s3:CreateBucket",
+                "s3:DeleteBucket",
+                "s3:DeleteBucketWebsite",
+                "s3:GetAccelerateConfiguration",
+                "s3:GetBucketAcl",
+                "s3:GetBucketCORS",
+                "s3:GetBucketLocation",
+                "s3:GetBucketLogging",
+                "s3:GetBucketObjectLockConfiguration",
+                "s3:GetBucketPolicy",
+                "s3:GetBucketPublicAccessBlock",
+                "s3:GetBucketRequestPayment",
+                "s3:GetBucketTagging",
+                "s3:GetBucketVersioning",
+                "s3:GetBucketWebsite",
+                "s3:GetEncryptionConfiguration",
+                "s3:GetIntelligentTieringConfiguration",
+                "s3:GetInventoryConfiguration",
+                "s3:GetLifecycleConfiguration",
+                "s3:GetMetricsConfiguration",
+                "s3:GetObject",
+                "s3:GetObjectAcl",
+                "s3:GetReplicationConfiguration",
+                "s3:ListAllMyBuckets",
+                "s3:ListBucket",
+                "s3:PutAccelerateConfiguration",
+                "s3:PutBucketAcl",
+                "s3:PutBucketCORS",
+                "s3:PutBucketLogging",
+                "s3:PutBucketObjectLockConfiguration",
+                "s3:PutBucketPolicy",
+                "s3:PutBucketPublicAccessBlock",
+                "s3:PutBucketRequestPayment",
+                "s3:PutBucketVersioning",
+                "s3:PutBucketWebsite",
+                "s3:PutEncryptionConfiguration",
+                "s3:PutIntelligentTieringConfiguration",
+                "s3:PutInventoryConfiguration",
+                "s3:PutLifecycleConfiguration",
+                "s3:PutMetricsConfiguration",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutReplicationConfiguration"
             ],
             "Resource": [
                 "*"
