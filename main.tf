@@ -7,6 +7,7 @@ locals {
 data "aws_region" "region" {}
 data "aws_caller_identity" "current" {}
 
+#Create a KMS KeyValue pair for encrypting S3 buckets created for storing terrafrom state
 resource "aws_kms_key" "mykey" {
   description             = "This key is used to encrypt bucket objects"
   deletion_window_in_days = 10
@@ -15,6 +16,7 @@ resource "aws_kms_key" "mykey" {
     local.tags,
   )
 }
+#IAM role created for EC2 instance to call AWS services on its behalf
 resource "aws_iam_role" "this" {
   assume_role_policy = <<EOF
 {
@@ -37,6 +39,7 @@ EOF
   )
 }
 
+#Generates an Bucket policy in JSON format so as to attach it with S3 bucket
 data "aws_iam_policy_document" "bucket_policy" {
   statement {
     principals {
@@ -54,9 +57,10 @@ data "aws_iam_policy_document" "bucket_policy" {
   }
 }
 
+# Create an S3 bucket for storing terraform state
 module "s3_bucket" {
   source                                = "terraform-aws-modules/s3-bucket/aws"
-  version                               = "3.10.0"
+  version                               = "4.1.2"
   bucket                                = format("%s-%s", var.bucket_name, data.aws_caller_identity.current.account_id)
   force_destroy                         = var.force_destroy
   attach_policy                         = true
@@ -91,19 +95,21 @@ module "s3_bucket" {
   object_ownership         = "BucketOwnerPreferred"
 }
 
+# Create a DynampDB table for locking terraform state
 resource "aws_dynamodb_table" "dynamodb_table" {
-  name           = format("%s-%s-%s", var.bucket_name, "lock-dynamodb", data.aws_caller_identity.current.account_id)
-  hash_key       = "LockID"
-  read_capacity  = 20
-  write_capacity = 20
-
+  name         = format("%s-%s-%s", var.bucket_name, "lock-dynamodb", data.aws_caller_identity.current.account_id)
+  hash_key     = "LockID"
+  billing_mode = "PAY_PER_REQUEST"
   attribute {
     name = "LockID"
     type = "S"
   }
 
   tags = merge(
-    { "Name" = format("%s-%s-%s", var.bucket_name, "lock-dynamodb", data.aws_caller_identity.current.account_id) },
+    {
+      "Name" = format("%s-%s-%s", var.bucket_name, "lock-dynamodb", data.aws_caller_identity.current.account_id),
+      "Cost" = format("%s-%s-%s", var.bucket_name, "lock-dynamodb", data.aws_caller_identity.current.account_id)
+    },
     local.tags,
   )
 }
